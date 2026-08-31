@@ -5,8 +5,8 @@
   --text-main: #e8eef7;
   --text-muted: #a7b1c2;
   --border: #2b3545;
-  --accent: #2f9e77;
-  --accent-hover: #37b889;
+  --accent: #0891b2;
+  --accent-hover: #06b6d4;
   --danger-soft: #a16f6f;
   --lease-action-view-bg: #2c405a;
   --lease-action-view-border: #3b5678;
@@ -235,8 +235,8 @@ body {
 }
 
 .app-module-btn.is-active {
-  background: var(--accent, #2563eb);
-  border-color: var(--accent, #2563eb);
+  background: var(--accent, #0891b2);
+  border-color: var(--accent, #0891b2);
   color: #fff;
 }
 
@@ -809,8 +809,8 @@ body {
 
 .primary-contact-card.is-selected .primary-contact-selected-indicator {
   color: #0c1a12;
-  border-color: #6bd0a4;
-  background: #6bd0a4;
+  border-color: #22d3ee;
+  background: #22d3ee;
 }
 
 .primary-contact-card-meta {
@@ -1123,8 +1123,8 @@ body {
 }
 
 .setup-progress-item.is-complete {
-  color: #c9f5e4;
-  border-color: #2f7f62;
+  color: #cffafe;
+  border-color: #0891b2;
 }
 
 .setup-step {
@@ -1395,7 +1395,7 @@ body {
   border-top: 1px solid var(--border);
   margin-top: 0.25rem;
   font-weight: 700;
-  color: #9ce8c8;
+  color: #67e8f9;
 }
 
 .btn-small {
@@ -1417,7 +1417,7 @@ body {
 
 /* Major screen sections: consistent accent framing + spacing so sections read as distinct blocks. */
 .section-card {
-  border-top: 3px solid rgba(47, 158, 119, 0.55);
+  border-top: 3px solid var(--accent);
   padding-top: 1.2rem;
 }
 
@@ -1616,7 +1616,7 @@ body {
 }
 
 .schedule-ops-priority-completed .schedule-ops-marker {
-  background: #2f9e77;
+  background: #0891b2;
 }
 
 .schedule-ops-main {
@@ -2355,7 +2355,7 @@ h3.document-register-row-title {
 
 .document-category-card.is-primary {
   border-color: rgba(47, 158, 119, 0.4);
-  box-shadow: inset 0 0 0 1px rgba(47, 158, 119, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(8, 145, 178, 0.16);
 }
 
 .document-category-card:hover {
@@ -2555,9 +2555,9 @@ h3.document-register-row-title {
 }
 
 .lease-category-tile.is-primary {
-  border-color: rgba(47, 158, 119, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(47, 158, 119, 0.2);
-  background: linear-gradient(180deg, rgba(47, 158, 119, 0.12) 0%, #17222b 100%);
+  border-color: rgba(8, 145, 178, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(8, 145, 178, 0.20);
+  background: linear-gradient(180deg, rgba(8, 145, 178, 0.12) 0%, #17222b 100%);
 }
 
 .lease-tile-header {
@@ -2597,9 +2597,9 @@ h3.document-register-row-title {
   top: 0.6rem;
   right: 0.62rem;
   border-radius: 999px;
-  border: 1px solid rgba(47, 158, 119, 0.35);
-  background: rgba(47, 158, 119, 0.16);
-  color: #9ce8c8;
+  border: 1px solid rgba(8, 145, 178, 0.35);
+  background: rgba(8, 145, 178, 0.16);
+  color: #67e8f9;
   padding: 0.12rem 0.52rem;
   font-size: 0.74rem;
   font-weight: 700;
@@ -3209,7 +3209,7 @@ h3.document-register-row-title {
   }
 }
 
-/* Compliance HQ authentication */
+/* Home HQ authentication */
 .auth-screen {
   min-height: 100vh;
   min-height: 100dvh;
@@ -3265,7 +3265,7 @@ h3.document-register-row-title {
 }
 
 .auth-form input:focus {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #0891b2;
   outline-offset: 1px;
 }
 

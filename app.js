@@ -5151,10 +5151,6 @@
 
   function openScheduleView(buildingId) {
     const buildings = window.BuildingStorage.getBuildings();
-    if (buildings.length === 0) {
-      openPropertiesView();
-      return;
-    }
 
     if (arguments.length > 0) {
       setCurrentPropertyId(buildingId && findBuildingById(buildingId) ? buildingId : "");
@@ -12403,7 +12399,7 @@
       } catch (error) {
         console.error("Calendar completion could not be saved to Supabase:", error);
         window.alert(
-          "The Calendar item was updated in this browser, but could not be saved to Compliance HQ. " +
+          "The Calendar item was updated in this browser, but could not be saved to Home HQ. " +
           "Please check your connection and try again before refreshing the page."
         );
         return;
@@ -13076,7 +13072,7 @@
           return;
         }
 
-        const shouldRestore = window.confirm("This will overwrite the current Compliance HQ data. Continue?");
+        const shouldRestore = window.confirm("This will overwrite the current Home HQ data. Continue?");
         if (!shouldRestore) {
           input.value = "";
           return;
@@ -13761,7 +13757,7 @@
       const loadResult = window.BuildingStorage.loadExternalApplicationData(applicationData);
 
       console.info(
-        "Compliance HQ loaded from Supabase:",
+        "Home HQ loaded from Supabase:",
         loadResult.buildingCount,
         "properties."
       );
@@ -13776,7 +13772,7 @@
     } catch (error) {
       console.error("Supabase startup failed:", error);
       showAuthenticationScreen(
-        "Unable to connect to Compliance HQ: " +
+        "Unable to connect to Home HQ: " +
         (error && error.message ? error.message : "Unknown error")
       );
     }

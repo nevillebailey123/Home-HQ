@@ -1,6 +1,6 @@
 {
-  "name": "Compliance HQ",
-  "short_name": "Compliance HQ",
+  "name": "Home HQ",
+  "short_name": "Home HQ",
   "display": "standalone",
   "start_url": "./",
   "theme_color": "#2563eb",

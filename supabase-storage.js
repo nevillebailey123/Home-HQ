@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const SUPABASE_URL = "https://utpfgldgiohbtvuaygkq.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_WI6VsYzn6SL7zSbrDZGM9g_qav2A0ZF";
+  const SUPABASE_URL = "https://xkovrlfewspbgayjqwkn.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_n3Ch9h7IVmjLcy577qNMLQ_fROOKKIg";
 
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
     console.error("Compliance HQ: Supabase library is unavailable.");
