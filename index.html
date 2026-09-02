@@ -17,7 +17,7 @@
     <section id="auth-screen" class="auth-screen" hidden>
       <div class="auth-card">
         <h1>Home HQ</h1>
-        <p class="auth-subtitle">Sign in to access your properties.</p>
+        <p class="auth-subtitle">Sign in to access your Home HQ.</p>
 
         <form id="auth-form" class="auth-form">
           <label for="auth-email">Email</label>
@@ -50,7 +50,7 @@
         <div class="app-shell-top">
           <button id="app-brand-btn" class="app-brand-btn" type="button" aria-label="Home HQ home">Home HQ</button>
           <div class="app-shell-property">
-            <label class="app-property-label" for="app-property-selector">Property</label>
+            <label class="app-property-label" for="app-property-selector">Asset</label>
             <select id="app-property-selector" class="schedule-filter-select app-property-select"></select>
             <button id="app-settings-btn" class="app-settings-btn" type="button" aria-label="Settings" title="Settings">
               <svg class="app-settings-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -61,9 +61,8 @@
           </div>
         </div>
         <nav id="app-module-nav" class="app-module-nav" aria-label="Main navigation">
-          <button class="app-module-btn" type="button" data-app-module="Properties">Properties</button>
+          <button class="app-module-btn" type="button" data-app-module="Properties">Assets</button>
           <button class="app-module-btn" type="button" data-app-module="Schedule">Calendar</button>
-          <button class="app-module-btn" type="button" data-app-module="Tenancy">Tenancies</button>
           <button class="app-module-btn" type="button" data-app-module="Contacts">Contacts</button>
           <button class="app-module-btn" type="button" data-app-module="Documents">Documents</button>
         </nav>
@@ -118,16 +117,16 @@
       <section id="settings-properties-view" class="view" aria-labelledby="settings-properties-title">
         <header class="view-header overview-header">
           <div>
-            <h1 id="settings-properties-title">Properties</h1>
-            <p class="tagline">View and manage your properties.</p>
+            <h1 id="settings-properties-title">Assets</h1>
+            <p class="tagline">Things you want Home HQ to keep track of.</p>
           </div>
           <div class="top-right-actions">
-            <button id="settings-add-property-btn" class="btn btn-primary" type="button">+ Add Property</button>
+            <button id="settings-add-property-btn" class="btn btn-primary" type="button">+ Add Asset</button>
           </div>
         </header>
 
         <section class="module-content-card section-card section-card-primary">
-          <div class="tab-row" role="tablist" aria-label="Property status">
+          <div class="tab-row" role="tablist" aria-label="Asset status">
             <button id="properties-tab-active" class="tab-btn is-active" type="button">Active</button>
             <button id="properties-tab-archived" class="tab-btn" type="button">Archived</button>
           </div>
@@ -167,7 +166,7 @@
         <header class="view-header overview-header">
           <div>
             <h1 id="template-library-title">Calendar Item Template Library</h1>
-            <p class="tagline">Reusable calendar templates available to every property.</p>
+            <p class="tagline">Reusable calendar templates available to every asset.</p>
           </div>
         </header>
 
@@ -232,232 +231,70 @@
 
       <section id="form-view" class="view" aria-labelledby="form-title">
         <header class="view-header">
-          <h1 id="form-title">New Property Setup</h1>
-          <p class="tagline">Complete setup so the property is ready to manage immediately.</p>
+          <h1 id="form-title">Add Asset</h1>
+          <p class="tagline">Add something you want Home HQ to keep track of.</p>
         </header>
 
-        <section class="module-content-card setup-progress-card" aria-label="Setup progress">
-          <ol id="setup-progress" class="setup-progress" role="list">
-            <li class="setup-progress-item is-active" data-progress-step="1">Property</li>
-            <li class="setup-progress-item" data-progress-step="2">Tenancy</li>
-            <li class="setup-progress-item" data-progress-step="3">Contacts</li>
-            <li class="setup-progress-item" data-progress-step="4">Calendar</li>
-            <li class="setup-progress-item" data-progress-step="5">Finish</li>
-          </ol>
-        </section>
-
-        <section id="setup-step-1" class="setup-step is-active" aria-labelledby="setup-step-1-title">
+        <section class="module-content-card section-card">
           <form id="building-form" class="building-form">
-            <h3 id="setup-step-1-title">Step 1: Property Details</h3>
+            <label for="buildingName">Asset Name</label>
+            <input
+              id="buildingName"
+              name="buildingName"
+              type="text"
+              placeholder="e.g. Home, Bearhawk, Land Rover"
+              required
+            />
 
-            <label for="buildingName">Property Name</label>
-            <input id="buildingName" name="buildingName" type="text" required />
+            <label for="buildingType">Asset Type</label>
+            <input
+              id="buildingType"
+              name="buildingType"
+              type="text"
+              placeholder="e.g. Home, Vehicle, Aircraft, Personal"
+            />
 
-            <label for="streetAddress">Street Address</label>
-            <input id="streetAddress" name="streetAddress" type="text" required />
-
-            <label for="city">City</label>
-            <input id="city" name="city" type="text" required />
-
-            <label for="owner">Owner</label>
-            <input id="owner" name="owner" type="text" required />
-
-            <label for="propertyManager">Property Manager</label>
-            <input id="propertyManager" name="propertyManager" type="text" required />
-
-            <label for="buildingType">Property Type</label>
-            <input id="buildingType" name="buildingType" type="text" placeholder="Office, Retail, Industrial, Mixed Use" required />
-
-            <p class="setup-helper-text">Status is assigned automatically after setup: Occupied when tenancy is added, otherwise Vacant.</p>
+            <label for="assetNotes">Notes</label>
+            <textarea
+              id="assetNotes"
+              name="notes"
+              rows="4"
+              placeholder="Optional notes about this asset"
+            ></textarea>
 
             <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Next</button>
+              <button class="btn btn-primary" type="submit">Save Asset</button>
               <button id="cancel-btn" class="btn btn-secondary" type="button">Cancel</button>
             </div>
           </form>
-        </section>
-
-        <section id="setup-step-2" class="setup-step" aria-labelledby="setup-step-2-title">
-          <div class="module-content-card setup-inner-card">
-            <h3 id="setup-step-2-title">Step 2: Current Tenancy</h3>
-            <p class="module-placeholder">Does this property currently have a tenant?</p>
-            <div class="form-actions">
-              <button id="setup-add-tenancy-btn" class="btn btn-primary" type="button">Add Current Tenancy</button>
-              <button id="setup-skip-tenancy-btn" class="btn btn-secondary" type="button">Skip</button>
-            </div>
-          </div>
-
-          <form id="setup-tenancy-form" class="building-form setup-subform">
-            <h3>Add Current Tenancy</h3>
-
-            <label for="setupTenancyCompanyId">Company</label>
-            <select id="setupTenancyCompanyId" name="companyId"></select>
-
-            <div id="setup-tenancy-new-company-wrap" style="display: none;">
-              <label for="setupTenancyNewCompanyName">New Company Name</label>
-              <input id="setupTenancyNewCompanyName" name="newCompanyName" type="text" />
-            </div>
-
-            <label for="setupLeaseStart">Lease Start</label>
-            <input id="setupLeaseStart" name="leaseStart" type="date" />
-
-            <label for="setupLeaseEnd">Lease End</label>
-            <input id="setupLeaseEnd" name="leaseEnd" type="date" />
-
-            <label for="setupTenancyNotes">Notes</label>
-            <textarea id="setupTenancyNotes" name="notes" rows="4"></textarea>
-
-            <div class="placeholder-actions">
-              <button class="btn btn-secondary" type="button">Attach Lease Agreement (placeholder)</button>
-            </div>
-
-            <div class="form-actions">
-              <button id="setup-save-tenancy-btn" class="btn btn-primary" type="button">Save and Continue</button>
-              <button id="setup-cancel-tenancy-btn" class="btn btn-secondary" type="button">Cancel Tenancy</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="setup-step-3" class="setup-step" aria-labelledby="setup-step-3-title">
-          <section class="module-content-card">
-            <h3 id="setup-step-3-title">Step 3: Contacts</h3>
-            <p class="module-placeholder">Associate people with this property.</p>
-
-
-            
-            <div class="actions-row actions-row-tight">
-              <button id="setup-add-existing-contact-btn" class="btn btn-secondary" type="button">+ Select Existing Contact</button>
-              <button id="setup-add-new-contact-btn" class="btn btn-primary" type="button">+ Create New Contact</button>
-            </div>
-          </section>
-
-          <form id="setup-existing-contact-form" class="building-form setup-subform">
-            <h3>Link Existing Contact</h3>
-
-            <label for="setupExistingContactId">Select Existing Contact</label>
-            <select id="setupExistingContactId" name="contactId"></select>
-
-            <label for="setupExistingContactRelationship">Relationship</label>
-            <select id="setupExistingContactRelationship" name="relationship"></select>
-
-            <div class="form-actions">
-              <button id="setup-link-existing-contact-btn" class="btn btn-primary" type="button">Link Contact</button>
-            </div>
-          </form>
-
-          <form id="setup-new-contact-form" class="building-form setup-subform">
-            <h3>Create New Contact</h3>
-
-            <label for="setupNewContactCompanyId">Company</label>
-            <select id="setupNewContactCompanyId" name="companyId"></select>
-
-            <div id="setup-new-contact-company-wrap" style="display: none;">
-              <label for="setupNewContactCompanyName">New Company Name</label>
-              <input id="setupNewContactCompanyName" name="newCompanyName" type="text" />
-            </div>
-
-            <label for="setupNewContactName">Name</label>
-            <input id="setupNewContactName" name="name" type="text" />
-
-            <label for="setupNewContactRelationship">Relationship</label>
-            <select id="setupNewContactRelationship" name="relationship"></select>
-
-            <label for="setupNewContactMobile">Mobile</label>
-            <input id="setupNewContactMobile" name="mobile" type="text" />
-
-            <label for="setupNewContactEmail">Email</label>
-            <input id="setupNewContactEmail" name="email" type="email" />
-
-            <div class="form-actions">
-              <button id="setup-create-contact-btn" class="btn btn-primary" type="button">Create and Link</button>
-            </div>
-          </form>
-
-          <section class="module-content-card">
-            <h3>Linked Contacts</h3>
-            <section id="setup-linked-contacts-list" class="building-list"></section>
-            <div class="form-actions">
-              <button id="setup-step-3-next-btn" class="btn btn-primary" type="button">Continue to Calendar Items</button>
-            </div>
-          </section>
-        </section>
-
-        <section id="setup-step-4" class="setup-step" aria-labelledby="setup-step-4-title">
-          <form id="setup-templates-form" class="building-form">
-            <h3 id="setup-step-4-title">Step 4: Calendar Items</h3>
-            <p class="module-placeholder">Select the calendar templates that apply to this property.</p>
-            <div class="setup-template-bulk-actions">
-              <button id="setup-select-all-btn" class="btn btn-secondary btn-small" type="button">Select All</button>
-              <button id="setup-clear-all-btn" class="btn btn-secondary btn-small" type="button">Clear All</button>
-            </div>
-            <section id="setup-template-list" class="setup-template-list"></section>
-
-            <div class="form-actions">
-              <button id="setup-step-4-next-btn" class="btn btn-primary" type="button">Continue</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="setup-step-5" class="setup-step" aria-labelledby="setup-step-5-title">
-          <form id="setup-configure-form" class="building-form">
-            <h3 id="setup-step-5-title">Step 5: Configure Selected Items</h3>
-            <p class="module-placeholder">Set due date, frequency, preferred company and preferred contact.</p>
-            <section id="setup-configure-list" class="setup-configure-list"></section>
-
-            <div class="form-actions">
-              <button id="setup-step-5-finish-btn" class="btn btn-primary" type="button">Finish Setup</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="setup-step-6" class="setup-step" aria-labelledby="setup-step-6-title">
-          <section class="module-content-card">
-            <h3 id="setup-step-6-title">Setup Complete</h3>
-            <section id="setup-finish-summary" class="setup-summary-list"></section>
-            <div class="form-actions">
-              <button id="setup-open-building-btn" class="btn btn-primary" type="button">Open Property</button>
-            </div>
-          </section>
-        </section>
-
-        <section class="module-content-card setup-footer-actions">
-          <div class="form-actions">
-            <button id="setup-back-btn" class="btn btn-secondary" type="button">Previous Step</button>
-            <button id="setup-save-exit-btn" class="btn btn-primary" type="button">Save &amp; Exit</button>
-            <button id="setup-cancel-btn" class="btn btn-secondary" type="button">Cancel Setup</button>
-          </div>
         </section>
       </section>
 
       <section id="overview-view" class="view" aria-labelledby="overview-title">
         <header class="view-header overview-header">
           <div>
-            <h1 id="overview-title">Property</h1>
+            <h1 id="overview-title">Asset</h1>
             <p id="overview-building-name" class="tagline"></p>
           </div>
           <div class="top-right-actions">
-            <button id="edit-building-btn" class="btn btn-primary" type="button">✏ Edit Property</button>
+            <button id="edit-building-btn" class="btn btn-primary" type="button">Edit Asset</button>
           </div>
         </header>
 
         <section class="module-content-card dashboard-summary-card" aria-live="polite">
-          <h3>Property Information</h3>
+          <h3>Asset Information</h3>
           <dl class="snapshot-list dashboard-snapshot-list">
-            <div><dt>Occupancy</dt><dd id="overview-status"></dd></div>
-            <div><dt>Property Manager</dt><dd id="overview-property-manager"></dd></div>
+            <div><dt>Type</dt><dd id="overview-status"></dd></div>
+            <div><dt>Notes</dt><dd id="overview-property-manager"></dd></div>
           </dl>
         </section>
 
         <section class="module-content-card dashboard-summary-card" aria-live="polite">
-          <h3 id="module-content-title">Compliance Summary</h3>
+          <h3 id="module-content-title">Calendar Summary</h3>
           <div id="module-content-body"></div>
         </section>
 
-        <section class="module-content-card dashboard-summary-card" aria-live="polite">
-          <h3>Tenancy Summary</h3>
-          <div id="overview-tenancy-summary"></div>
-        </section>
-
+        <div id="overview-tenancy-summary" style="display: none;"></div>
       </section>
 
       <section id="tenancy-view" class="view" aria-labelledby="tenancy-title">
@@ -604,7 +441,7 @@
             <label for="document-title-input">Document Title</label>
             <input id="document-title-input" name="title" type="text" required />
 
-            <label for="document-building-select">Property</label>
+            <label for="document-building-select">Asset</label>
             <select id="document-building-select" name="buildingId" required></select>
 
             <label for="document-category-select">Category</label>
@@ -722,9 +559,9 @@
 
           <section id="contact-linked-property-section" class="contact-linked-schedule-section" style="display: block;">
             <div class="contacts-list-header">
-              <h3>Linked Properties</h3>
+              <h3>Linked Assets</h3>
               <div class="contacts-list-actions">
-                <button id="contact-add-property-link-btn" class="btn btn-secondary" type="button">Link Property</button>
+                <button id="contact-add-property-link-btn" class="btn btn-secondary" type="button">Link Asset</button>
               </div>
             </div>
             <section id="contact-linked-property-list" class="building-list" aria-live="polite"></section>
@@ -762,7 +599,7 @@
         <header class="view-header overview-header">
           <div>
             <h1 id="companies-title">Company Directory</h1>
-            <p class="tagline">View and maintain companies used across this property.</p>
+            <p class="tagline">View and maintain companies used across this asset.</p>
             <p id="companies-building-name" class="overview-building-name visually-hidden"></p>
           </div>
         </header>
@@ -930,38 +767,17 @@
 
       <section id="edit-view" class="view" aria-labelledby="edit-title">
         <header class="view-header">
-          <h1 id="edit-title">Edit Property</h1>
+          <h1 id="edit-title">Edit Asset</h1>
         </header>
 
         <form id="edit-building-form" class="building-form">
           <input id="editBuildingId" name="editBuildingId" type="hidden" />
 
-          <label for="editBuildingName">Property Name</label>
+          <label for="editBuildingName">Asset Name</label>
           <input id="editBuildingName" name="buildingName" type="text" required />
 
-          <label for="editStreetAddress">Street Address</label>
-          <input id="editStreetAddress" name="streetAddress" type="text" required />
-
-          <label for="editCity">City</label>
-          <input id="editCity" name="city" type="text" required />
-
-          <label for="editOwner">Owner</label>
-          <input id="editOwner" name="owner" type="text" required />
-
-          <label for="editPropertyManager">Property Manager</label>
-          <input id="editPropertyManager" name="propertyManager" type="text" required />
-
-          <fieldset class="status-group">
-            <legend>Status</legend>
-            <label class="radio-option">
-              <input type="radio" name="status" value="Occupied" />
-              <span>Occupied</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="status" value="Vacant" />
-              <span>Vacant</span>
-            </label>
-          </fieldset>
+          <label for="editBuildingType">Asset Type</label>
+          <input id="editBuildingType" name="buildingType" type="text" placeholder="e.g. Home, Vehicle, Aircraft, Personal" />
 
           <label for="editNotes">Notes</label>
           <textarea id="editNotes" name="notes" rows="4"></textarea>
@@ -973,19 +789,19 @@
         </form>
 
         <section id="edit-property-management" class="module-content-card property-management-section" aria-labelledby="edit-property-management-title">
-          <h3 id="edit-property-management-title">Property Management</h3>
+          <h3 id="edit-property-management-title">Asset Management</h3>
           <p id="edit-property-management-help" class="module-placeholder"></p>
           <div class="actions-row actions-row-tight">
-            <button id="edit-archive-property-btn" class="btn btn-secondary" type="button">Archive Property</button>
-            <button id="edit-restore-property-btn" class="btn btn-secondary" type="button">Restore Property</button>
+            <button id="edit-archive-property-btn" class="btn btn-secondary" type="button">Archive Asset</button>
+            <button id="edit-restore-property-btn" class="btn btn-secondary" type="button">Restore Asset</button>
           </div>
         </section>
 
         <section id="edit-property-danger" class="module-content-card property-danger-section" aria-labelledby="edit-property-danger-title">
-          <h3 id="edit-property-danger-title">Delete Property</h3>
-          <p class="module-placeholder">Permanent deletion cannot be undone. It removes this property and its stored tenancies, calendar items, documents and history. Archive the property instead if you only need to hide it.</p>
+          <h3 id="edit-property-danger-title">Delete Asset</h3>
+          <p class="module-placeholder">Permanent deletion cannot be undone. It removes this asset and its linked calendar items, documents and history. Archive the asset instead if you only need to hide it.</p>
           <div class="actions-row actions-row-tight">
-            <button id="edit-delete-property-btn" class="btn btn-danger-subtle" type="button">Delete Property Permanently</button>
+            <button id="edit-delete-property-btn" class="btn btn-danger-subtle" type="button">Delete Asset Permanently</button>
           </div>
         </section>
       </section>

@@ -258,7 +258,7 @@
 
   const RELATIONSHIP_OPTIONS = [
     "Owner",
-    "Property Manager",
+    "Home HQ",
     "Tenant Representative",
     "Tenant Accounts",
     "HVAC Contractor",
@@ -282,7 +282,7 @@
   const CONTACT_RELATIONSHIP_GROUPS = [
     {
       title: "BUILDING",
-      relationships: ["Owner", "Property Manager"],
+      relationships: ["Owner", "Home HQ"],
     },
     {
       title: "TENANT",
@@ -698,7 +698,12 @@
     hideAllViews();
     setAppShellVisible(false);
     formView.classList.add("is-active");
-    startSetupWorkflow();
+    buildingForm.reset();
+
+    setBreadcrumbs([
+      { label: "Assets", onClick: openPropertiesView },
+      { label: "Add Asset", onClick: showForm },
+    ]);
   }
 
   function showOverview() {
@@ -706,7 +711,7 @@
     overviewView.classList.add("is-active");
     setActiveAppModule("Properties");
     setBreadcrumbs([
-      { label: "Properties", onClick: function () {
+      { label: "Assets", onClick: function () {
         setCurrentPropertyId("");
         renderAllBuildingFilterSelects();
         openPropertiesView();
@@ -720,9 +725,9 @@
     setAppShellVisible(false);
     editView.classList.add("is-active");
     setBreadcrumbs([
-      { label: "Properties", onClick: openPropertiesView },
+      { label: "Assets", onClick: openPropertiesView },
       { label: getActiveBuildingName(), onClick: function () { openOverviewById(activeBuildingId); } },
-      { label: "Edit Property", onClick: showEditForm },
+      { label: "Edit Asset", onClick: showEditForm },
     ]);
   }
 
@@ -752,7 +757,7 @@
     companiesView.classList.add("is-active");
     setActiveAppModule("Contacts");
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: "Contacts", onClick: openContactsView },
       { label: "Companies", onClick: openCompaniesView },
     ]);
@@ -770,7 +775,7 @@
     historyView.classList.add("is-active");
     setActiveAppModule("Schedule");
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: "Calendar", onClick: function () { openScheduleView(activeBuildingId); } },
       { label: "Completed", onClick: function () { openHistoryView(activeBuildingId); } },
     ]);
@@ -781,7 +786,7 @@
     setAppShellVisible(false);
     completeTaskView.classList.add("is-active");
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: "Calendar", onClick: function () { openScheduleView(activeBuildingId); } },
       { label: "Complete Task", onClick: function () { openCompleteTaskView(activeScheduleItemId); } },
     ]);
@@ -1480,7 +1485,7 @@
     }
 
     const filterId = getBuildingFilterId();
-    selectElement.innerHTML = ['<option value="">All Properties</option>']
+    selectElement.innerHTML = ['<option value="">All Assets</option>']
       .concat(getSortedBuildings().map(function (building) {
         return `<option value="${escapeHtml(building.id)}">${escapeHtml(building.buildingName)}</option>`;
       }))
@@ -1506,7 +1511,7 @@
   }
 
   function getBuildingFilterEmptySuffix() {
-    return getBuildingFilterId() ? "this Property" : "your properties";
+    return getBuildingFilterId() ? "this Asset" : "your assets";
   }
 
   function updateSelectedBuildingHeader() {
@@ -1862,28 +1867,20 @@
 
     if (buildings.length === 0) {
       settingsPropertyList.innerHTML = propertiesListMode === "archived"
-        ? '<p class="module-placeholder">No archived properties.</p>'
-        : '<p class="module-placeholder">No active properties have been added yet.</p>';
+        ? '<p class="module-placeholder">No archived assets.</p>'
+        : '<p class="module-placeholder">No active assets have been added yet.</p>';
       return;
     }
 
     settingsPropertyList.innerHTML = buildings.map(function (building) {
       const archived = isBuildingArchived(building);
-      const incomplete = building.setupIncomplete === true;
-      const address = [building.streetAddress, building.city].filter(Boolean).join(", ");
-      const currentTenancy = getCurrentTenancyForProperty(building);
-      const tenantName = currentTenancy ? getTenancyDisplayName(currentTenancy) : "None";
-      const occupancyStatus = archived
-        ? "Archived"
-        : (currentTenancy ? "Occupied" : "Vacant");
-      const leaseExpiry = currentTenancy && currentTenancy.leaseEnd
-        ? formatDate(currentTenancy.leaseEnd)
-        : "—";
-      const manager = String(building.propertyManager || "").trim() || "Not assigned";
+      const assetType = String(building.buildingType || "").trim() || "Other";
       const scheduleItems = Array.isArray(building.scheduleItems) ? building.scheduleItems : [];
+
       const overdueCount = scheduleItems.filter(function (item) {
         return item.dueDate && getScheduleBucket(item) === "overdue";
       }).length;
+
       const dueSoonCount = scheduleItems.filter(function (item) {
         if (!item.dueDate) {
           return false;
@@ -1891,6 +1888,7 @@
         const bucket = getScheduleBucket(item);
         return bucket === "today" || bucket === "week";
       }).length;
+
       const nextItem = getNextScheduleItemForProperty(building);
       const nextDue = nextItem
         ? `${escapeHtml(nextItem.taskName || "Calendar Item")} · ${escapeHtml(formatDate(nextItem.dueDate))}`
@@ -1900,26 +1898,20 @@
         <article class="building-card property-workspace-card${archived ? " is-archived" : ""}" data-settings-property-id="${escapeHtml(building.id)}">
           <div class="property-card-heading">
             <div>
-              <h3>${escapeHtml(building.buildingName || "Untitled Property")}</h3>
-              ${address ? `<p class="property-card-address">${escapeHtml(address)}</p>` : ""}
+              <h3>${escapeHtml(building.buildingName || "Untitled Asset")}</h3>
+              <p class="property-card-address">${escapeHtml(assetType)}</p>
             </div>
-            <span class="property-status-label">${escapeHtml(occupancyStatus)}</span>
+            ${archived ? '<span class="property-status-label">Archived</span>' : ""}
           </div>
 
           <dl class="property-card-details">
-            <div><dt>Property Manager</dt><dd>${escapeHtml(manager)}</dd></div>
-            <div><dt>Current Tenant</dt><dd>${escapeHtml(tenantName)}</dd></div>
-            <div><dt>Lease Expiry</dt><dd>${escapeHtml(leaseExpiry)}</dd></div>
             <div><dt>Next Due</dt><dd>${nextDue}</dd></div>
             <div><dt>Due Soon</dt><dd>${dueSoonCount}</dd></div>
             <div><dt>Overdue</dt><dd class="${overdueCount > 0 ? "property-overdue-value" : ""}">${overdueCount}</dd></div>
           </dl>
 
-          ${incomplete ? '<p class="property-setup-warning">Property setup is incomplete.</p>' : ""}
-
           <div class="document-item-actions settings-property-actions">
-            ${incomplete && !archived ? '<button class="btn btn-secondary lease-tile-btn" type="button" data-settings-property-action="resume-setup">Resume Setup</button>' : ""}
-            <button class="btn btn-primary lease-tile-btn" type="button" data-settings-property-action="view">View Property</button>
+            <button class="btn btn-primary lease-tile-btn" type="button" data-settings-property-action="view">View Asset</button>
           </div>
         </article>
       `;
@@ -2043,8 +2035,8 @@
     setupNewContactCompanyWrap.style.display = "none";
     setupLinkedContactsList.innerHTML = '<p class="module-placeholder">No contacts linked yet.</p>';
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
-      { label: "New Property Setup", onClick: showForm },
+      { label: "Assets", onClick: goToDashboard },
+      { label: "New Asset", onClick: showForm },
     ]);
     renderSetupRelationshipOptions(setupExistingContactRelationship, "Other");
     renderSetupRelationshipOptions(setupNewContactRelationship, "Other");
@@ -2163,7 +2155,7 @@
 
     setBreadcrumbs([
       { label: "Settings", onClick: openSettingsView },
-      { label: "Resume Property Setup", onClick: function () { resumeSetupWorkflow(building); } },
+      { label: "Resume Asset Setup", onClick: function () { resumeSetupWorkflow(building); } },
     ]);
 
     showSetupStep(savedStep);
@@ -2173,13 +2165,15 @@
     const formData = new FormData(buildingForm);
     return {
       buildingName: String(formData.get("buildingName") || "").trim(),
-      streetAddress: String(formData.get("streetAddress") || "").trim(),
-      city: String(formData.get("city") || "").trim(),
-      owner: String(formData.get("owner") || "").trim(),
-      propertyManager: String(formData.get("propertyManager") || "").trim(),
       buildingType: String(formData.get("buildingType") || "").trim(),
+      notes: String(formData.get("notes") || "").trim(),
+      streetAddress: "",
+      city: "",
+      owner: "",
+      propertyManager: "",
     };
   }
+
 
   function renderSetupTenancyCompanyOptions(selectedId) {
     const options = ['<option value="">Select a company</option>'];
@@ -2613,7 +2607,7 @@
 
   function finalizeSetupAndCreateBuilding() {
     if (!setupState.buildingDetails) {
-      alert("Property details are incomplete.");
+      alert("Asset details are incomplete.");
       return;
     }
 
@@ -2816,51 +2810,44 @@
     event.preventDefault();
 
     const details = buildSetupBuildingDetails();
-    setupState.buildingDetails = details;
 
-    const now = new Date().toISOString();
-    const existing = setupState.propertyId
-      ? window.BuildingStorage.getBuildingById(setupState.propertyId)
-      : null;
-
-    if (existing) {
-      window.BuildingStorage.updateBuilding({
-        ...existing,
-        ...details,
-        setupIncomplete: true,
-        setupStep: 2,
-        lastUpdated: now,
-      });
-    } else {
-      const propertyId = window.BuildingStorage.createId();
-      const building = {
-        id: propertyId,
-        ...details,
-        status: "Vacant",
-        notes: "",
-        createdDate: now,
-        lastUpdated: now,
-        tenancy: null,
-        tenancies: [],
-        buildingContactAssignments: [],
-        buildingRoles: [],
-        documents: [],
-        documentCategories: createDefaultDocumentCategories(),
-        propertyTemplates: [],
-        scheduleItems: [],
-        historyRecords: [],
-        setupIncomplete: true,
-        setupStep: 2,
-      };
-
-      window.BuildingStorage.addBuilding(building);
-      setupState.propertyId = propertyId;
-      setupState.createdBuildingId = propertyId;
+    if (!details.buildingName) {
+      alert("Please enter an Asset Name.");
+      return;
     }
 
+    const now = new Date().toISOString();
+    const assetId = window.BuildingStorage.createId();
+
+    const asset = {
+      id: assetId,
+      ...details,
+      status: "Active",
+      archived: false,
+      createdDate: now,
+      lastUpdated: now,
+      tenancy: null,
+      tenancies: [],
+      buildingContactAssignments: [],
+      buildingRoles: [],
+      documents: [],
+      documentCategories: createDefaultDocumentCategories(),
+      propertyTemplates: [],
+      scheduleItems: [],
+      historyRecords: [],
+      setupIncomplete: false,
+      setupStep: 0,
+    };
+
+    window.BuildingStorage.addBuilding(asset);
+
+    setCurrentPropertyId(assetId);
     renderBuildings();
-    showSetupStep(2);
+    renderAllBuildingFilterSelects();
+    buildingForm.reset();
+    openPropertiesView();
   }
+
 
   function handleSetupCancel() {
     setupState = createEmptySetupState();
@@ -2870,13 +2857,13 @@
 
   function handleSetupSaveExit() {
     if (!setupState.propertyId) {
-      alert("Complete Property Details and select Next before saving setup.");
+      alert("Complete Asset Details and select Next before saving setup.");
       return;
     }
 
     const existingBuilding = window.BuildingStorage.getBuildingById(setupState.propertyId);
     if (!existingBuilding) {
-      alert("The property could not be found.");
+      alert("The asset could not be found.");
       return;
     }
 
@@ -3037,7 +3024,7 @@
 
   function renderPropertySelectOptions(selectedId) {
     const buildings = window.BuildingStorage.getBuildings();
-    const options = ['<option value="">Select Property</option>'];
+    const options = ['<option value="">Select Asset</option>'];
 
     buildings.forEach(function (building) {
       const selected = String(building.id || "") === String(selectedId || "") ? " selected" : "";
@@ -3628,14 +3615,14 @@
 
   function getBuildingDisplayLabel(building) {
     if (!building) {
-      return "Unknown property";
+      return "Unknown asset";
     }
     const name = String(building.buildingName || "").trim();
     const address = String(building.streetAddress || "").trim();
     if (name && address) {
       return `${name} — ${address}`;
     }
-    return name || address || "Unknown property";
+    return name || address || "Unknown asset";
   }
 
   // Canonical tenancy -> contact relationship storage: tenancy.contactRefs[] holds master contact ids.
@@ -4178,7 +4165,7 @@
       : previousDueDate;
 
     const completedAt = options.completedAt || new Date().toISOString();
-    const completedBy = options.completedBy || "Property Manager";
+    const completedBy = options.completedBy || "Home HQ";
     const historyId = window.BuildingStorage.createId();
     const completionDocument = options.completionDocument
       ? {
@@ -4719,8 +4706,8 @@
       const lastCompletionRecord = getPendingRevertRecord(building, item);
       const itemPropertyId = String(item.propertyId || "").trim();
       const itemPropertyName = itemPropertyId
-        ? getBuildingNameById(itemPropertyId) || "Property not assigned"
-        : "Property not assigned";
+        ? getBuildingNameById(itemPropertyId) || "Asset not assigned"
+        : "Asset not assigned";
       const visualPriority = getScheduleVisualPriority(item, diffDays);
       return {
         item: item,
@@ -4821,7 +4808,7 @@
     const previousDueDate = String(template.nextDueDate || scheduleItem.dueDate || "").trim();
     const newDueDate = getNextDueDatePlaceholder(previousDueDate, template.defaultFrequency || scheduleItem.frequency, template.customRecurringDates, false);
     const completedAt = options.completedAt || new Date().toISOString();
-    const completedBy = options.completedBy || "Property Manager";
+    const completedBy = options.completedBy || "Home HQ";
     const historyId = window.BuildingStorage.createId();
     const completionDocument = options.completionDocument
       ? {
@@ -4935,7 +4922,7 @@
     }
 
     const revertedAt = new Date().toISOString();
-    const revertedBy = "Property Manager";
+    const revertedBy = "Home HQ";
 
     const updatedPropertyTemplates = getPropertyTemplates(building).map(function (entry) {
       if (entry.id !== template.id) {
@@ -4996,7 +4983,7 @@
     const statusClass = `schedule-row-status-${row.visualPriority}`;
     const isTenancyItem = row.item.sourceType === "tenancy";
     const isDocumentItem = row.item.sourceType === "document";
-    const propertyMarkup = `<p class="schedule-row-meta">Property: ${escapeHtml(row.propertyName || "Property not assigned")}</p>`;
+    const propertyMarkup = `<p class="schedule-row-meta">Asset: ${escapeHtml(row.propertyName || "Asset not assigned")}</p>`;
     const lastCompletedMarkup = `<p class="schedule-row-meta">Last Completed: ${escapeHtml(formatLastCompletedDate(row.lastCompletedDate))}</p>`;
     const dueDateMarkup = `<p class="schedule-row-due ${dueClass}">Next Due Date: ${formatDate(row.item.dueDate)}</p>`;
     const statusMarkup = `<p class="schedule-row-status ${statusClass}">Status: ${escapeHtml(row.statusText)}</p>`;
@@ -5132,7 +5119,7 @@
 
   function renderSchedulePage() {
     const buildings = getNormalizedScheduleBuildings();
-    scheduleBuildingName.textContent = activeBuildingId ? getActiveBuildingName() : "All Properties";
+    scheduleBuildingName.textContent = activeBuildingId ? getActiveBuildingName() : "All Assets";
 
     const rows = buildings.flatMap(function (building) {
       return decorateScheduleRows(building, building.scheduleItems || []);
@@ -5871,9 +5858,9 @@
       return "No documents match your search.";
     }
     if (leaseCategoryFilterValue) {
-      return `No ${leaseCategoryFilterValue} documents${getBuildingFilterId() ? " for this Property" : ""}.`;
+      return `No ${leaseCategoryFilterValue} documents${getBuildingFilterId() ? " for this Asset" : ""}.`;
     }
-    return getBuildingFilterId() ? "No documents for this Property." : "No documents have been added yet.";
+    return getBuildingFilterId() ? "No documents for this Asset." : "No documents have been added yet.";
   }
 
   function renderDocumentRegister() {
@@ -6037,7 +6024,7 @@
     }
     const options = selectedId
       ? []
-      : ['<option value="">Select a Property</option>'];
+      : ['<option value="">Select an Asset</option>'];
     documentBuildingSelect.innerHTML = options.concat(getSortedBuildings().map(function (building) {
       return `<option value="${escapeHtml(building.id)}">${escapeHtml(building.buildingName)}</option>`;
     })).join("");
@@ -6572,7 +6559,7 @@
       uploadedAt: now,
       documentType: documentRecord.documentType,
       version: documentRecord.version || "v1",
-      user: documentRecord.uploadedBy || "Property Manager",
+      user: documentRecord.uploadedBy || "Home HQ",
       notes: note,
       sourceDocumentId: documentRecord.id,
       fileName: documentRecord.fileName || "",
@@ -6588,7 +6575,7 @@
         sizeBytes: documentRecord.sizeBytes || 0,
         uploadedAt: documentRecord.uploadedAt || "",
         lastUpdated: documentRecord.lastUpdated || "",
-        uploadedBy: documentRecord.uploadedBy || "Property Manager",
+        uploadedBy: documentRecord.uploadedBy || "Home HQ",
         documentDate: documentRecord.documentDate || "",
         description: documentRecord.description || "",
         notes: documentRecord.notes || "",
@@ -6778,11 +6765,11 @@
     };
 
     placeholderTitle.textContent = moduleName;
-    placeholderDescription.textContent = descriptions[moduleName] || "Module information for this property.";
+    placeholderDescription.textContent = descriptions[moduleName] || "Module information for this asset.";
     placeholderBuildingName.textContent = getActiveBuildingName();
     placeholderMessage.textContent = message;
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: getActiveBuildingName(), onClick: function () { openOverviewById(activeBuildingId); } },
       { label: moduleName, onClick: function () { showModulePlaceholder(moduleName, message); } },
     ]);
@@ -6810,7 +6797,7 @@
     if (contacts.length === 0) {
       if (contactsEmptyMessage) {
         contactsEmptyMessage.textContent = getBuildingFilterId()
-          ? "No contacts associated with this Property."
+          ? "No contacts associated with this Asset."
           : "No contacts have been added.";
       }
       contactsEmptyState.style.display = "block";
@@ -7325,7 +7312,7 @@
     const usage = options && options.usage ? options.usage : null;
     const isInUse = usage && (usage.assignedProperties > 0 || usage.scheduleItems > 0 || usage.historyRecords > 0 || usage.attachments > 0);
     const warningMessage = isInUse
-      ? `This Master Template is in use: ${usage.assignedProperties} assigned Property Templates, ${usage.scheduleItems} schedule items, ${usage.historyRecords} completion records, ${usage.attachments} template documents.`
+      ? `This Master Template is in use: ${usage.assignedProperties} assigned Asset Templates, ${usage.scheduleItems} schedule items, ${usage.historyRecords} completion records, ${usage.attachments} template documents.`
       : "";
     return new Promise(function (resolve) {
       const backdrop = window.document.createElement("div");
@@ -7469,7 +7456,7 @@
     renderTemplateLibrarySectionState("form");
     showTemplateLibraryView();
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: "Template Library", onClick: openTemplateLibrary },
       { label: mode === "edit" ? "Edit Master Template" : "Add Master Template", onClick: function () { openTemplateForm(mode, template); } },
     ]);
@@ -7731,7 +7718,7 @@
     const building = findBuildingById(getBuildingFilterId());
     renderAllBuildingFilterSelects();
 
-    contactsBuildingName.textContent = building ? building.buildingName : "All Properties";
+    contactsBuildingName.textContent = building ? building.buildingName : "All Assets";
     activeContactId = "";
     contactsSearchQuery = "";
     populateContactCompanySelect("", null);
@@ -7828,7 +7815,7 @@
     renderContactSectionState("form");
     showContactsView();
     setBreadcrumbs([
-      { label: "Properties", onClick: goToDashboard },
+      { label: "Assets", onClick: goToDashboard },
       { label: getActiveBuildingName(), onClick: function () { openOverviewById(activeBuildingId); } },
       { label: "Contacts", onClick: openContactsView },
       { label: mode === "edit" ? "Edit Contact" : "New Contact", onClick: function () { openContactForm(mode, contact); } },
@@ -8042,7 +8029,7 @@
     renderAllBuildingFilterSelects();
 
     const filterBuilding = findBuildingById(getBuildingFilterId());
-    tenancyBuildingName.textContent = filterBuilding ? filterBuilding.buildingName : "All Properties";
+    tenancyBuildingName.textContent = filterBuilding ? filterBuilding.buildingName : "All Assets";
     renderTenancyHistory();
 
     // Canonical tenancy list renderer: always driven by building.tenancies[].
@@ -8154,7 +8141,7 @@
 
     const building = getTenancyEditBuilding();
     if (!building) {
-      alert("Select a property before adding a tenancy.");
+      alert("Select an asset before adding a tenancy.");
       return;
     }
 
@@ -8397,7 +8384,7 @@
       ...tenancy,
       status: "Archived",
       archivedAt: archivedAt,
-      archivedBy: "Property Manager",
+      archivedBy: "Home HQ",
       documents: leaseDocuments,
       lease: {
         ...lease,
@@ -8621,7 +8608,7 @@
       ? escapeHtml(currentTenancy.status || "Current")
       : "Vacant";
 
-    moduleContentTitle.textContent = "Compliance Summary";
+    moduleContentTitle.textContent = "Calendar Summary";
     moduleContentBody.innerHTML = `
       <dl class="snapshot-list dashboard-snapshot-list">
         <div><dt>Overdue Items</dt><dd>${overdueCount}</dd></div>
@@ -8643,15 +8630,12 @@
 
 
   function renderOverview(building) {
-    const currentTenancy = getCurrentTenancyForProperty(building);
-    const address = [building.streetAddress, building.city].filter(Boolean).join(", ");
+    document.getElementById("overview-title").textContent = building.buildingName || "Asset";
+    overviewBuildingName.textContent = String(building.buildingType || "").trim() || "Asset";
+    overviewStatus.textContent = String(building.buildingType || "").trim() || "Not specified";
+    overviewPropertyManager.textContent = String(building.notes || "").trim() || "None";
 
-    document.getElementById("overview-title").textContent = building.buildingName || "Property";
-    overviewBuildingName.textContent = address;
-    overviewStatus.textContent = currentTenancy ? "Occupied" : "Vacant";
-    overviewPropertyManager.textContent = String(building.propertyManager || "").trim() || "Not assigned";
-
-    renderOverviewModule("Compliance", building);
+    renderOverviewModule("Calendar", building);
   }
 
   function openOverviewById(buildingId) {
@@ -8667,17 +8651,9 @@
 
   function populateEditForm(building) {
     editBuildingForm.elements.editBuildingId.value = building.id;
-    editBuildingForm.elements.buildingName.value = building.buildingName;
-    editBuildingForm.elements.streetAddress.value = building.streetAddress;
-    editBuildingForm.elements.city.value = building.city;
-    editBuildingForm.elements.owner.value = building.owner;
-    editBuildingForm.elements.propertyManager.value = building.propertyManager;
+    editBuildingForm.elements.buildingName.value = building.buildingName || "";
+    editBuildingForm.elements.buildingType.value = building.buildingType || "";
     editBuildingForm.elements.notes.value = building.notes || "";
-
-    const statusFields = editBuildingForm.elements.status;
-    for (let i = 0; i < statusFields.length; i += 1) {
-      statusFields[i].checked = statusFields[i].value === building.status;
-    }
   }
 
   function handleEditSave(event) {
@@ -8697,11 +8673,7 @@
       ...current,
       id: current.id,
       buildingName: String(formData.get("buildingName") || "").trim(),
-      streetAddress: String(formData.get("streetAddress") || "").trim(),
-      city: String(formData.get("city") || "").trim(),
-      owner: String(formData.get("owner") || "").trim(),
-      propertyManager: String(formData.get("propertyManager") || "").trim(),
-      status: String(formData.get("status") || "Occupied"),
+      buildingType: String(formData.get("buildingType") || "").trim(),
       notes: String(formData.get("notes") || "").trim(),
       createdDate: current.createdDate || new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
@@ -9112,14 +9084,14 @@
     if (!contactLinkedPropertySection || !contactLinkedPropertyList) return;
     contactLinkedPropertySection.style.display = "block";
     if (!contact || !contact.id) {
-      contactLinkedPropertyList.innerHTML = '<p class="module-placeholder">Save this contact before linking properties.</p>';
+      contactLinkedPropertyList.innerHTML = '<p class="module-placeholder">Save this contact before linking assets.</p>';
       if (contactAddPropertyLinkBtn instanceof HTMLButtonElement) contactAddPropertyLinkBtn.style.display = "none";
       return;
     }
     if (contactAddPropertyLinkBtn instanceof HTMLButtonElement) contactAddPropertyLinkBtn.style.display = "inline-flex";
     const links = getPropertyLinksForContact(contact.id);
     if (links.length === 0) {
-      contactLinkedPropertyList.innerHTML = '<p class="module-placeholder">No linked properties.</p>';
+      contactLinkedPropertyList.innerHTML = '<p class="module-placeholder">No linked assets.</p>';
       return;
     }
     contactLinkedPropertyList.innerHTML = links.map(function (building) {
@@ -9140,11 +9112,11 @@
       backdrop.className = "template-delete-modal-backdrop";
       backdrop.innerHTML = `
         <div class="template-delete-modal" role="dialog" aria-modal="true" aria-labelledby="contact-link-property-title">
-          <h3 id="contact-link-property-title">Link Property</h3>
-          <p>Select a property to link to ${escapeHtml(contact.name)}.</p>
-          <label><span class="visually-hidden">Property</span>
+          <h3 id="contact-link-property-title">Link Asset</h3>
+          <p>Select an asset to link to ${escapeHtml(contact.name)}.</p>
+          <label><span class="visually-hidden">Asset</span>
             <select id="contact-link-property-select" class="schedule-filter-select">
-              <option value="">Select property</option>
+              <option value="">Select asset</option>
               ${buildings.map(function (building) { return `<option value="${escapeHtml(building.id)}">${escapeHtml(getBuildingDisplayLabel(building))}</option>`; }).join("")}
             </select>
           </label>
@@ -9175,7 +9147,7 @@
     const linkedIds = new Set(getPropertyLinksForContact(contact.id).map(function (building) { return String(building.id); }));
     const available = window.BuildingStorage.getBuildings().filter(function (building) { return !linkedIds.has(String(building.id)); });
     if (available.length === 0) {
-      alert("There are no further properties available to link.");
+      alert("There are no further assets available to link.");
       return;
     }
     const buildingId = await showContactPropertyLinkDialog(contact, available);
@@ -10185,7 +10157,7 @@
       dialog.innerHTML = `
         <h3 id="master-template-delete-title">Delete Master Template</h3>
         <p>Are you sure you want to permanently delete this Master Template?</p>
-        <p>This will not affect any Property Templates that have already been created from it.</p>
+        <p>This will not affect any Asset Templates that have already been created from it.</p>
         <div class="template-delete-modal-actions">
           <button class="btn btn-secondary" type="button" data-master-template-delete-action="cancel">Cancel</button>
           <button class="btn template-delete-btn" type="button" data-master-template-delete-action="delete">Delete</button>
@@ -10252,7 +10224,7 @@
 
       dialog.innerHTML = `
         <div class="template-picker-header">
-          <h3 id="template-picker-title">Add Templates To Property</h3>
+          <h3 id="template-picker-title">Add Templates To Asset</h3>
           <button class="template-picker-close" type="button" aria-label="Close" data-template-picker-action="close">&times;</button>
         </div>
         <div class="template-picker-toolbar">
@@ -10268,7 +10240,7 @@
         </div>
         <div class="template-picker-list" data-template-picker-list></div>
         <div class="template-delete-modal-actions template-picker-actions">
-          <button class="btn btn-primary" type="button" data-template-picker-action="add">Update Property Templates</button>
+          <button class="btn btn-primary" type="button" data-template-picker-action="add">Update Asset Templates</button>
         </div>
       `;
 
@@ -10523,14 +10495,14 @@
         : [];
       const listMarkup = scheduleItemNames.length > 0
         ? `
-          <p>You are about to remove the following calendar items from ${escapeHtml(buildingName || "this property")}:</p>
+          <p>You are about to remove the following calendar items from ${escapeHtml(buildingName || "this asset")}:</p>
           <ul class="template-unassign-list">
             ${scheduleItemNames.map(function (name) {
               return `<li>${escapeHtml(name)}</li>`;
             }).join("")}
           </ul>
         `
-        : '<p>You are about to remove one or more calendar items from this property.</p>';
+        : '<p>You are about to remove one or more calendar items from this asset.</p>';
 
       dialog.innerHTML = `
         <h3 id="template-unassign-modal-title">Remove Calendar Items?</h3>
@@ -10652,7 +10624,7 @@
 
       dialog.innerHTML = `
         <h3 id="property-template-editor-title">Add Templates To Calendar</h3>
-        <p>Choose how each selected template should be scheduled for this property.</p>
+        <p>Choose how each selected template should be scheduled for this asset.</p>
         <form class="template-property-editor-form">
           <div class="template-property-editor-list">
             ${sourceTemplates.map(function (template) {
@@ -10993,7 +10965,7 @@
 
   async function handleManageTemplatesForProperty() {
     if (!activeBuildingId) {
-      alert("Select a property before managing templates for a property calendar.");
+      alert("Select an asset before managing templates for its calendar.");
       return;
     }
 
@@ -11668,12 +11640,12 @@
     const initialDueDate = submittedInitialDueDate || fallbackInitialDueDate || templateInitialDueDate;
 
     if (!title || !propertyId) {
-      alert("Title and Property are required.");
+      alert("Title and Asset are required.");
       return;
     }
 
     if (frequency !== "Custom" && !initialDueDate) {
-      alert("Title, Property and Initial Due Date are required.");
+      alert("Title, Asset and Initial Due Date are required.");
       return;
     }
 
@@ -11793,7 +11765,7 @@
       dialog.setAttribute("aria-labelledby", "schedule-item-delete-modal-title");
 
       const itemName = String(scheduleItem && scheduleItem.taskName ? scheduleItem.taskName : "Calendar Item").trim() || "Calendar Item";
-      const propertyName = String(building && building.buildingName ? building.buildingName : "this property").trim() || "this property";
+      const propertyName = String(building && building.buildingName ? building.buildingName : "this asset").trim() || "this asset";
       dialog.innerHTML = `
         <h3 id="schedule-item-delete-modal-title">Delete Calendar Item?</h3>
         <p><strong>${escapeHtml(itemName)}</strong> will be permanently removed from ${escapeHtml(propertyName)}.</p>
@@ -12061,7 +12033,7 @@
           <section class="schedule-details-section">
             <h4>Calendar Details</h4>
             <dl class="schedule-details-grid">
-              <div><dt>Property</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Property not assigned")}</dd></div>
+              <div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Asset not assigned")}</dd></div>
               <div><dt>Tenancy</dt><dd>${escapeHtml(tenancyCompanyName)}</dd></div>
               <div><dt>Event Type</dt><dd>${escapeHtml(eventTypeLabel)}</dd></div>
               <div><dt>Category</dt><dd>${escapeHtml(categoryValue)}</dd></div>
@@ -12109,7 +12081,7 @@
           <section class="schedule-details-section">
             <form class="schedule-details-edit-form" data-schedule-details-edit-form>
               <label>Title<input name="title" type="text" value="${escapeHtml(titleValue)}" required /></label>
-              <label>Property *
+              <label>Asset *
                 <select name="propertyId" required>
                   ${renderPropertySelectOptions(propertyValue || building.id)}
                 </select>
@@ -12165,7 +12137,7 @@
             <h4>Calendar Details</h4>
           </div>
           <dl class="schedule-details-grid" data-schedule-details-display>
-            <div><dt>Property</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Property not assigned")}</dd></div>
+            <div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Asset not assigned")}</dd></div>
             <div><dt>Frequency</dt><dd>${escapeHtml(frequencyDisplay)}</dd></div>
             ${scheduledDatesMarkup}
             <div><dt>Category</dt><dd>${escapeHtml(categoryValue)}</dd></div>
@@ -12214,7 +12186,7 @@
           <h3 id="schedule-complete-title">Complete ${escapeHtml(scheduleItem.taskName)}</h3>
           <form class="schedule-complete-form">
             <label>Completed Date<input name="completedDate" type="date" value="${now}" required /></label>
-            <label>Completed By<input name="completedBy" type="text" value="Property Manager" required /></label>
+            <label>Completed By<input name="completedBy" type="text" value="Home HQ" required /></label>
             <label>Notes<textarea name="notes" rows="3"></textarea></label>
             <label>Document Category
               <select name="documentCategory" class="schedule-filter-select">
@@ -12333,7 +12305,7 @@
 
           close({
             completedDate: String(formData.get("completedDate") || "").trim(),
-            completedBy: String(formData.get("completedBy") || "").trim() || "Property Manager",
+            completedBy: String(formData.get("completedBy") || "").trim() || "Home HQ",
             notes: String(formData.get("notes") || "").trim(),
             completionDocument: completionDocument,
           });
@@ -13256,8 +13228,8 @@
     const archived = isBuildingArchived(building);
     if (editPropertyManagementHelp) {
       editPropertyManagementHelp.textContent = archived
-        ? "This property is archived. Restoring it makes it available again in the operational Property selector. All of its records have been preserved."
-        : "Archiving hides this property from normal operational views and the Property selector. Its tenancies, contacts, calendar items, documents and history are all preserved.";
+        ? "This asset is archived. Restoring it makes it available again in the Asset selector. All of its records have been preserved."
+        : "Archiving hides this asset from normal views and the Asset selector. Its contacts, calendar items, documents and history are all preserved.";
     }
     if (editArchivePropertyBtn) {
       editArchivePropertyBtn.style.display = archived ? "none" : "inline-flex";
@@ -13316,9 +13288,9 @@
       dialog.setAttribute("aria-labelledby", "property-delete-modal-title");
 
       dialog.innerHTML = `
-        <h3 id="property-delete-modal-title">Delete Property</h3>
-        <p>Permanently delete <strong>${escapeHtml(building.buildingName || "this property")}</strong>?</p>
-        <p>This removes the property and its tenancies, calendar items, documents and history. Contacts, companies and master templates in the central repository are kept. This action cannot be undone.</p>
+        <h3 id="property-delete-modal-title">Delete Asset</h3>
+        <p>Permanently delete <strong>${escapeHtml(building.buildingName || "this asset")}</strong>?</p>
+        <p>This removes the asset and its associated calendar items, documents and history. Contacts and master templates in the central repository are kept. This action cannot be undone.</p>
         <div class="template-delete-modal-actions">
           <button class="btn btn-secondary" type="button" data-property-delete-action="cancel">Cancel</button>
           <button class="btn template-delete-btn" type="button" data-property-delete-action="delete">Delete</button>
@@ -13415,33 +13387,6 @@
   }
 
   cancelBtn.addEventListener("click", handleSetupCancel);
-  setupCancelBtn.addEventListener("click", handleSetupCancel);
-  if (setupSaveExitBtn instanceof HTMLButtonElement) {
-    setupSaveExitBtn.addEventListener("click", handleSetupSaveExit);
-  }
-  setupBackBtn.addEventListener("click", handleSetupBack);
-  setupAddTenancyBtn.addEventListener("click", handleSetupAddTenancy);
-  setupSkipTenancyBtn.addEventListener("click", handleSetupSkipTenancy);
-  setupSaveTenancyBtn.addEventListener("click", saveSetupTenancyAndContinue);
-  setupCancelTenancyBtn.addEventListener("click", handleSetupCancelTenancy);
-  setupTenancyCompanyId.addEventListener("change", handleSetupTenancyCompanyChange);
-  setupAddExistingContactBtn.addEventListener("click", handleSetupShowExistingContact);
-  setupAddNewContactBtn.addEventListener("click", handleSetupShowNewContact);
-  setupLinkExistingContactBtn.addEventListener("click", addExistingContactToSetup);
-  setupNewContactCompanyId.addEventListener("change", handleSetupContactCompanyChange);
-  setupCreateContactBtn.addEventListener("click", addNewContactToSetup);
-  setupLinkedContactsList.addEventListener("click", handleSetupLinkedContactListClick);
-  setupStep3NextBtn.addEventListener("click", handleSetupStepThreeNext);
-  if (setupSelectAllBtn instanceof HTMLButtonElement) {
-    setupSelectAllBtn.addEventListener("click", handleSetupSelectAll);
-  }
-  if (setupClearAllBtn instanceof HTMLButtonElement) {
-    setupClearAllBtn.addEventListener("click", handleSetupClearAll);
-  }
-  setupStep4NextBtn.addEventListener("click", handleSetupStepFourNext);
-  setupConfigureList.addEventListener("change", handleConfigureListChange);
-  setupStep5FinishBtn.addEventListener("click", handleSetupStepFiveFinish);
-  setupOpenBuildingBtn.addEventListener("click", handleSetupOpenBuilding);
   companiesBackBtn.addEventListener("click", handleCompaniesBack);
   manageTemplatesBtn.addEventListener("click", handleManageTemplatesForProperty);
   historyBackBtn.addEventListener("click", handleHistoryBack);
@@ -13759,7 +13704,7 @@
       console.info(
         "Home HQ loaded from Supabase:",
         loadResult.buildingCount,
-        "properties."
+        "assets."
       );
 
       window.BuildingStorage.setSupabaseSyncSuppressed(true);
