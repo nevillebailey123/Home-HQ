@@ -875,6 +875,7 @@
       id: String(template.id || window.BuildingStorage.createId()),
       name: String(template.name || "").trim(),
       description: String(template.description || "").trim(),
+      assetType: String(template.assetType || "All Assets").trim() || "All Assets",
       category: category,
       defaultFrequency: frequency,
       nextDueDate: nextDueDate,
@@ -2437,7 +2438,15 @@
   }
 
   function renderTemplateLibrary() {
-    const templates = getActiveScheduledItemTemplates();
+    const assetType = normalizeText(setupState.buildingDetails && setupState.buildingDetails.buildingType);
+
+    const templates = getActiveScheduledItemTemplates().filter(function (template) {
+      const templateAssetType = normalizeText(template.assetType || "All Assets");
+
+      return templateAssetType === "all assets"
+        || !templateAssetType
+        || (assetType && templateAssetType === assetType);
+    });
 
     if (templates.length === 0) {
       setupTemplateList.innerHTML = '<p class="module-placeholder">No active templates available. Add templates in the Template Library.</p>';
@@ -2453,7 +2462,7 @@
         return `
           <label class="setup-checkbox-row">
             <input type="checkbox" value="${template.id}"${checked} />
-            <span>${template.name} (${template.category}, ${template.defaultFrequency})</span>
+            <span>${template.name} (${template.assetType || "All Assets"}, ${template.category}, ${template.defaultFrequency})</span>
           </label>
         `;
       })
@@ -2702,7 +2711,7 @@
       return template.active === "Yes" && !String(template.nextDueDate || "").trim();
     });
     if (missingDueDateForActiveTemplate) {
-      alert("Please enter a next due date for all active property templates.");
+      alert("Please enter a next due date for all active calendar items.");
       return;
     }
 
@@ -2996,7 +3005,7 @@
       return item.active === "Yes" && !String(item.dueDate || "").trim();
     });
     if (missingDueDate) {
-      alert("Please enter a next due date for all active property templates.");
+      alert("Please enter a next due date for all active calendar items.");
       return;
     }
 
@@ -7214,6 +7223,7 @@
         <div class="template-card-layout">
           <section class="template-card-column template-card-column-left">
             <h3 class="template-card-title">${template.name}</h3>
+            <p class="template-card-field"><span class="template-card-label">Asset Type</span><span class="template-card-value">${template.assetType || "All Assets"}</span></p>
             <p class="template-card-field"><span class="template-card-label">Frequency</span><span class="template-card-value">${template.defaultFrequency}</span></p>
             <p class="template-card-field"><span class="template-card-label">Status</span><span class="template-card-value">${template.active === "Yes" ? "Active" : "Inactive"}</span></p>
             <p class="template-card-field"><span class="template-card-label">Category</span><span class="template-card-value">${template.category}</span></p>
@@ -7312,7 +7322,7 @@
     const usage = options && options.usage ? options.usage : null;
     const isInUse = usage && (usage.assignedProperties > 0 || usage.scheduleItems > 0 || usage.historyRecords > 0 || usage.attachments > 0);
     const warningMessage = isInUse
-      ? `This Master Template is in use: ${usage.assignedProperties} assigned Asset Templates, ${usage.scheduleItems} schedule items, ${usage.historyRecords} completion records, ${usage.attachments} template documents.`
+      ? `This template is in use: ${usage.assignedProperties} assigned Asset Templates, ${usage.scheduleItems} schedule items, ${usage.historyRecords} completion records, ${usage.attachments} template documents.`
       : "";
     return new Promise(function (resolve) {
       const backdrop = window.document.createElement("div");
@@ -7325,10 +7335,10 @@
       dialog.setAttribute("aria-labelledby", "template-delete-modal-title");
 
       dialog.innerHTML = `
-        <h3 id="template-delete-modal-title">Delete Master Template</h3>
-        <p>Are you sure you want to permanently delete this Master Template?</p>
+        <h3 id="template-delete-modal-title">Delete Template</h3>
+        <p>Are you sure you want to permanently delete this template?</p>
         ${warningMessage ? `<p>${warningMessage}</p>` : ""}
-        <p>Historical Property calendar and completion records are retained.</p>
+        <p>Historical asset calendar and completion records are retained.</p>
         <div class="template-delete-modal-actions">
           <button class="btn btn-secondary" type="button" data-template-delete-confirm="cancel">Cancel</button>
           <button class="btn template-delete-btn" type="button" data-template-delete-confirm="delete">Delete</button>
@@ -7436,7 +7446,7 @@
     activeTemplateId = template && template.id ? template.id : "";
     resetTemplateForm();
 
-    templateFormTitle.textContent = mode === "edit" ? "Edit Master Template" : "Add Master Template";
+    templateFormTitle.textContent = mode === "edit" ? "Edit Template" : "Add Template";
     if (templateFormDeleteBtn instanceof HTMLButtonElement) {
       templateFormDeleteBtn.style.display = mode === "edit" ? "inline-flex" : "none";
       templateFormDeleteBtn.disabled = mode !== "edit";
@@ -7445,6 +7455,7 @@
       templateForm.elements.templateId.value = template.id;
       templateForm.elements.name.value = template.name || "";
       templateForm.elements.description.value = template.description || "";
+      templateForm.elements.assetType.value = template.assetType || "All Assets";
       templateForm.elements.nextDueDate.value = template.nextDueDate || "";
       templateForm.elements.defaultReminderPeriod.value = template.defaultReminderPeriod || "30 days before";
       templateForm.elements.suggestedDocuments.value = getSuggestedDocumentsText(template.suggestedDocuments);
@@ -7458,7 +7469,7 @@
     setBreadcrumbs([
       { label: "Assets", onClick: goToDashboard },
       { label: "Template Library", onClick: openTemplateLibrary },
-      { label: mode === "edit" ? "Edit Master Template" : "Add Master Template", onClick: function () { openTemplateForm(mode, template); } },
+      { label: mode === "edit" ? "Edit Template" : "Add Template", onClick: function () { openTemplateForm(mode, template); } },
     ]);
   }
 
@@ -7469,6 +7480,7 @@
       id: existingTemplate && existingTemplate.id ? existingTemplate.id : window.BuildingStorage.createId(),
       name: String(formData.get("name") || "").trim(),
       description: String(formData.get("description") || "").trim(),
+      assetType: String(formData.get("assetType") || "All Assets").trim() || "All Assets",
       category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
       defaultFrequency: String(formData.get("defaultFrequency") || "Annual").trim(),
       nextDueDate: String(formData.get("nextDueDate") || "").trim(),
@@ -9923,7 +9935,7 @@
       dialog.setAttribute("aria-labelledby", "template-master-create-title");
 
       dialog.innerHTML = `
-        <h3 id="template-master-create-title">Add Master Template</h3>
+        <h3 id="template-master-create-title">Add Template</h3>
         <form class="template-master-create-form">
           <label>
             <span>Name</span>
@@ -9932,6 +9944,10 @@
           <label>
             <span>Description (Optional)</span>
             <textarea name="description" rows="2" placeholder="Short template description"></textarea>
+          </label>
+          <label>
+            <span>Asset Type</span>
+            <input name="assetType" type="text" value="All Assets" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
           </label>
           <label>
             <span>Category</span>
@@ -9984,6 +10000,7 @@
             id: window.BuildingStorage.createId(),
             name: String(formData.get("name") || "").trim(),
             description: String(formData.get("description") || "").trim(),
+            assetType: String(formData.get("assetType") || "All Assets").trim() || "All Assets",
             category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
             defaultFrequency: String(formData.get("defaultFrequency") || "Annual").trim(),
             nextDueDate: "",
@@ -10040,11 +10057,15 @@
       dialog.setAttribute("aria-labelledby", "template-master-edit-title");
 
       dialog.innerHTML = `
-        <h3 id="template-master-edit-title">Edit Master Template</h3>
+        <h3 id="template-master-edit-title">Edit Template</h3>
         <form class="template-master-create-form">
           <label>
             <span>Name</span>
             <input name="name" type="text" value="${escapeHtml(template.name)}" required />
+          </label>
+          <label>
+            <span>Asset Type</span>
+            <input name="assetType" type="text" value="${escapeHtml(template.assetType || "All Assets")}" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
           </label>
           <label>
             <span>Category</span>
@@ -10071,6 +10092,7 @@
             <textarea name="defaultNotes" rows="2">${escapeHtml(template.defaultNotes || "")}</textarea>
           </label>
           <div class="template-delete-modal-actions">
+            <button class="btn template-delete-btn" type="button" data-template-master-edit-action="delete">Delete Template</button>
             <button class="btn btn-secondary" type="button" data-template-master-edit-action="cancel">Cancel</button>
             <button class="btn btn-primary" type="submit">Save Changes</button>
           </div>
@@ -10109,6 +10131,18 @@
         const action = target.getAttribute("data-template-master-edit-action");
         if (action === "cancel") {
           closeWith(null);
+          return;
+        }
+
+        if (action === "delete") {
+          confirmMasterTemplateDeleteDialog().then(function (confirmed) {
+            if (!confirmed) {
+              return;
+            }
+
+            deleteTemplate(template.id);
+            closeWith(null);
+          });
         }
       });
 
@@ -10120,6 +10154,7 @@
           const updated = normalizeTemplateRecord({
             ...template,
             name: String(formData.get("name") || "").trim(),
+            assetType: String(formData.get("assetType") || template.assetType || "All Assets").trim() || "All Assets",
             category: String(formData.get("category") || template.category || "General").trim(),
             defaultFrequency: String(formData.get("defaultFrequency") || template.defaultFrequency || "Annual").trim(),
             defaultReminderPeriod: String(formData.get("defaultReminderPeriod") || "").trim(),
@@ -10155,8 +10190,8 @@
       dialog.setAttribute("aria-labelledby", "master-template-delete-title");
 
       dialog.innerHTML = `
-        <h3 id="master-template-delete-title">Delete Master Template</h3>
-        <p>Are you sure you want to permanently delete this Master Template?</p>
+        <h3 id="master-template-delete-title">Delete Template</h3>
+        <p>Are you sure you want to permanently delete this template?</p>
         <p>This will not affect any Asset Templates that have already been created from it.</p>
         <div class="template-delete-modal-actions">
           <button class="btn btn-secondary" type="button" data-master-template-delete-action="cancel">Cancel</button>
@@ -10228,11 +10263,11 @@
           <button class="template-picker-close" type="button" aria-label="Close" data-template-picker-action="close">&times;</button>
         </div>
         <div class="template-picker-toolbar">
-          <button class="btn btn-secondary btn-small" type="button" data-template-picker-action="new-master">+ Add Master Template</button>
+          <button class="btn btn-secondary btn-small" type="button" data-template-picker-action="new-master">+ Add Template</button>
         </div>
         <label class="template-picker-search-wrap">
           <span class="visually-hidden">Search templates</span>
-          <input id="template-picker-search" class="search-input template-picker-search" type="search" placeholder="Search by template name, category, or description" />
+          <input id="template-picker-search" class="search-input template-picker-search" type="search" placeholder="Search by template name, asset type, category, or description" />
         </label>
         <div class="template-picker-bulk-actions">
           <button class="btn btn-secondary btn-small" type="button" data-template-picker-action="select-all">Select All</button>
@@ -10272,10 +10307,24 @@
       }
 
       function getFilteredTemplates() {
-        // Archived masters stay listed only while already assigned, so they can be
-        // unassigned but never newly assigned.
+        // Already-assigned templates remain visible so they can always be unassigned.
+        // New assignments are limited to active templates that apply to this asset type.
+        const assetType = normalizeText(building && building.buildingType);
+
         const templates = getScheduledItemTemplates().filter(function (template) {
-          return isMasterTemplateActive(template) || initialSelectedIds.has(template.id);
+          const alreadyAssigned = initialSelectedIds.has(template.id);
+          if (alreadyAssigned) {
+            return true;
+          }
+
+          if (!isMasterTemplateActive(template)) {
+            return false;
+          }
+
+          const templateAssetType = normalizeText(template.assetType || "All Assets");
+          return templateAssetType === "all assets"
+            || !templateAssetType
+            || (assetType && templateAssetType === assetType);
         });
 
         if (!searchQuery) {
@@ -10285,6 +10334,7 @@
         const query = normalizeText(searchQuery);
         return templates.filter(function (template) {
           return normalizeText(template.name).includes(query)
+            || normalizeText(template.assetType).includes(query)
             || normalizeText(template.category).includes(query)
             || normalizeText(template.description).includes(query);
         });
@@ -10316,6 +10366,7 @@
               <input type="checkbox" value="${template.id}"${checked} />
               <span class="template-picker-item-content">
                 <strong>${escapeHtml(template.name)}</strong>
+                <span>${escapeHtml(template.assetType || "All Assets")}</span>
                 <span>${escapeHtml(template.category)}</span>
                 <span>${escapeHtml(template.defaultFrequency)}</span>
                 ${archivedLabel}
@@ -10398,10 +10449,7 @@
             if (!template) {
               return;
             }
-            const updated = await openInlineMasterTemplateEditDialog(template);
-            if (!updated) {
-              return;
-            }
+            await openInlineMasterTemplateEditDialog(template);
             renderList();
             return;
           }
@@ -13290,7 +13338,7 @@
       dialog.innerHTML = `
         <h3 id="property-delete-modal-title">Delete Asset</h3>
         <p>Permanently delete <strong>${escapeHtml(building.buildingName || "this asset")}</strong>?</p>
-        <p>This removes the asset and its associated calendar items, documents and history. Contacts and master templates in the central repository are kept. This action cannot be undone.</p>
+        <p>This removes the asset and its associated calendar items, documents and history. Contacts and calendar templates are kept. This action cannot be undone.</p>
         <div class="template-delete-modal-actions">
           <button class="btn btn-secondary" type="button" data-property-delete-action="cancel">Cancel</button>
           <button class="btn template-delete-btn" type="button" data-property-delete-action="delete">Delete</button>

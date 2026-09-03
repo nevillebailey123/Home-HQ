@@ -165,28 +165,28 @@
         </div>
         <header class="view-header overview-header">
           <div>
-            <h1 id="template-library-title">Calendar Item Template Library</h1>
-            <p class="tagline">Reusable calendar templates available to every asset.</p>
+            <h1 id="template-library-title">Calendar Templates</h1>
+            <p class="tagline">Create and manage reusable calendar items for your assets.</p>
           </div>
         </header>
 
         <section id="template-library-empty-state" class="module-content-card section-card">
           <p class="module-placeholder">No templates have been created.</p>
           <div class="actions-row actions-row-tight">
-            <button id="add-template-btn" class="btn btn-primary" type="button">+ Add Master Template</button>
+            <button id="add-template-btn" class="btn btn-primary" type="button">+ Add Template</button>
           </div>
         </section>
 
         <section id="template-library-list-card" class="module-content-card section-card">
           <div class="contacts-list-header">
             <h3>Template Directory</h3>
-            <button id="add-template-inline-btn" class="btn btn-primary" type="button">+ Add Master Template</button>
+            <button id="add-template-inline-btn" class="btn btn-primary" type="button">+ Add Template</button>
           </div>
           <section id="template-library-list" class="building-list" aria-live="polite"></section>
         </section>
 
         <section id="template-library-form-card" class="module-content-card section-card">
-          <h3 id="template-form-title">Add Master Template</h3>
+          <h3 id="template-form-title">Add Template</h3>
           <form id="template-form" class="building-form">
             <input id="templateId" name="templateId" type="hidden" />
 
@@ -195,6 +195,15 @@
 
             <label for="templateDescription">Description (Optional)</label>
             <textarea id="templateDescription" name="description" rows="2" placeholder="Short template description"></textarea>
+
+            <label for="templateAssetType">Asset Type</label>
+            <input
+              id="templateAssetType"
+              name="assetType"
+              type="text"
+              value="All Assets"
+              placeholder="e.g. All Assets, Home, Vehicle, Aircraft"
+            />
 
             <label for="templateCategory">Category</label>
             <select id="templateCategory" name="category" required></select>
@@ -222,7 +231,7 @@
 
             <div class="form-actions">
               <button class="btn btn-primary" type="submit">Save</button>
-              <button id="template-form-delete-btn" class="btn template-delete-btn" type="button" style="display: none;">Delete Master Template</button>
+              <button id="template-form-delete-btn" class="btn template-delete-btn" type="button" style="display: none;">Delete Template</button>
               <button id="cancel-template-btn" class="btn btn-secondary" type="button">Cancel</button>
             </div>
           </form>

@@ -4621,3 +4621,7 @@ body.settings-active #app-property-selector {
   color: #ef4444;
   font-weight: 700;
 }
+
+.template-master-create-modal .template-delete-modal-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
