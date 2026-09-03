@@ -670,7 +670,14 @@
   }
 
   function openSettingsProperties() {
-    openPropertiesView();
+    renderSettingsPropertyList();
+    hideAllViews();
+    settingsPropertiesView.classList.add("is-active");
+    setActiveAppModule("settings");
+    setBreadcrumbs([
+      { label: "Settings", onClick: openSettingsView },
+      { label: "Assets", onClick: openSettingsProperties },
+    ]);
   }
 
   function openSettingsDocumentCategories() {
@@ -696,12 +703,13 @@
 
   function showForm() {
     hideAllViews();
-    setAppShellVisible(false);
+    setActiveAppModule("settings");
     formView.classList.add("is-active");
     buildingForm.reset();
 
     setBreadcrumbs([
-      { label: "Assets", onClick: openPropertiesView },
+      { label: "Settings", onClick: openSettingsView },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "Add Asset", onClick: showForm },
     ]);
   }
@@ -960,7 +968,7 @@
       : FIXED_DOCUMENT_CATEGORIES;
 
     const seen = new Set();
-    const categories = stored
+    return stored
       .map(function (category) {
         return String(category || "").trim();
       })
@@ -971,8 +979,6 @@
         seen.add(key);
         return true;
       });
-
-    return categories.length > 0 ? categories : FIXED_DOCUMENT_CATEGORIES.slice();
   }
 
   function saveDocumentCategories(categories) {
@@ -2929,13 +2935,13 @@
     renderBuildings();
     renderAllBuildingFilterSelects();
     buildingForm.reset();
-    openPropertiesView();
+    openSettingsProperties();
   }
 
 
   function handleSetupCancel() {
     setupState = createEmptySetupState();
-    openSettingsView();
+    openSettingsProperties();
     renderBuildings();
   }
 
