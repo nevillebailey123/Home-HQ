@@ -477,6 +477,15 @@ async function loadApplicationData() {
     ? documentCategoriesSetting.value
     : null;
 
+  const assetTypesSetting = appSettingsRows.find(function (row) {
+    return row.id === "asset_types";
+  });
+
+  const assetTypes = assetTypesSetting
+    && Array.isArray(assetTypesSetting.value)
+    ? assetTypesSetting.value
+    : null;
+
   return {
     buildings: buildings,
     masterData: {
@@ -484,6 +493,7 @@ async function loadApplicationData() {
       contacts: contacts,
       scheduledItemTemplates: scheduledItemTemplates,
       documents: [],
+      assetTypes: assetTypes,
       documentCategories: documentCategories,
     },
     counts: {
@@ -637,11 +647,18 @@ async function syncCurrentApplicationData() {
   const buildings = window.BuildingStorage.getBuildings();
   const master = window.BuildingStorage.getMasterData();
 
-  const appSettings = [{
-    id: "document_categories",
-    value: Array.isArray(master.documentCategories) ? master.documentCategories : [],
-    updated_at: new Date().toISOString(),
-  }];
+  const appSettings = [
+    {
+      id: "document_categories",
+      value: Array.isArray(master.documentCategories) ? master.documentCategories : [],
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "asset_types",
+      value: Array.isArray(master.assetTypes) ? master.assetTypes : [],
+      updated_at: new Date().toISOString(),
+    },
+  ];
 
   const companies = (master.companies || []).map(function (company) {
     return {

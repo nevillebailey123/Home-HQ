@@ -13,9 +13,11 @@
   const editView = document.getElementById("edit-view");
   const settingsView = document.getElementById("settings-view");
   const settingsPropertiesView = document.getElementById("settings-properties-view");
+  const settingsAssetTypesView = document.getElementById("settings-asset-types-view");
   const settingsDocumentCategoriesView = document.getElementById("settings-document-categories-view");
   const settingsBackupView = document.getElementById("settings-backup-view");
   const settingsPropertiesBtn = document.getElementById("settings-properties-btn");
+  const settingsAssetTypesBtn = document.getElementById("settings-asset-types-btn");
   const settingsDocumentCategoriesBtn = document.getElementById("settings-document-categories-btn");
   const settingsBackupBtn = document.getElementById("settings-backup-btn");
   const settingsPropertiesBackBtn = document.getElementById("settings-properties-back-btn");
@@ -27,6 +29,11 @@
   const settingsPropertyList = document.getElementById("settings-property-list");
   const settingsAddPropertyBtn = document.getElementById("settings-add-property-btn");
   const settingsTemplatesBtn = document.getElementById("settings-templates-btn");
+  const settingsAssetTypeList = document.getElementById("settings-asset-type-list");
+  const settingsAddAssetTypeBtn = document.getElementById("settings-add-asset-type-btn");
+  const settingsAssetTypeForm = document.getElementById("settings-asset-type-form");
+  const settingsAssetTypeInput = document.getElementById("settings-asset-type-input");
+  const settingsAssetTypeCancelBtn = document.getElementById("settings-asset-type-cancel-btn");
   const settingsDocumentCategoryList = document.getElementById("settings-document-category-list");
   const settingsAddDocumentCategoryBtn = document.getElementById("settings-add-document-category-btn");
   const settingsDocumentCategoryForm = document.getElementById("settings-document-category-form");
@@ -638,6 +645,9 @@
     if (settingsPropertiesView) {
       settingsPropertiesView.classList.remove("is-active");
     }
+    if (settingsAssetTypesView) {
+      settingsAssetTypesView.classList.remove("is-active");
+    }
     if (settingsDocumentCategoriesView) {
       settingsDocumentCategoriesView.classList.remove("is-active");
     }
@@ -680,6 +690,17 @@
     ]);
   }
 
+  function openSettingsAssetTypes() {
+    renderAssetTypeSettings();
+    hideAllViews();
+    settingsAssetTypesView.classList.add("is-active");
+    setActiveAppModule("settings");
+    setBreadcrumbs([
+      { label: "Settings", onClick: openSettingsView },
+      { label: "Asset Types", onClick: openSettingsAssetTypes },
+    ]);
+  }
+
   function openSettingsDocumentCategories() {
     renderDocumentCategorySettings();
     hideAllViews();
@@ -706,6 +727,7 @@
     setActiveAppModule("settings");
     formView.classList.add("is-active");
     buildingForm.reset();
+    populateAssetTypeSelect(buildingForm.elements.buildingType, "", false);
 
     setBreadcrumbs([
       { label: "Settings", onClick: openSettingsView },
@@ -959,6 +981,42 @@
       createdDate: String(template.createdDate || now),
       lastUpdated: String(template.lastUpdated || now),
     };
+  }
+
+  const DEFAULT_ASSET_TYPES = [
+    "Home",
+    "Aircraft",
+    "Vehicle",
+    "Personal",
+    "Other",
+  ];
+
+  function getAssetTypes() {
+    const masterData = getMasterData();
+    const stored = Array.isArray(masterData.assetTypes)
+      ? masterData.assetTypes
+      : DEFAULT_ASSET_TYPES;
+
+    const seen = new Set();
+    return stored
+      .map(function (assetType) {
+        return String(assetType || "").trim();
+      })
+      .filter(function (assetType) {
+        if (!assetType) return false;
+        const key = assetType.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  function saveAssetTypes(assetTypes) {
+    const masterData = getMasterData();
+    window.BuildingStorage.saveMasterData({
+      ...masterData,
+      assetTypes: assetTypes.slice(),
+    });
   }
 
   function getDocumentCategories() {
@@ -1600,6 +1658,254 @@
 
     return count;
   }
+  function getAssetTypeUsageCount(assetType) {
+    const typeName = String(assetType || "").trim();
+
+    return getAllBuildingsIncludingArchived().filter(function (building) {
+      return String(building.buildingType || "").trim() === typeName;
+    }).length;
+  }
+
+  function openAssetTypeAddForm() {
+    if (!settingsAssetTypeForm || !settingsAssetTypeInput) {
+      return;
+    }
+
+    settingsAssetTypeForm.style.display = "block";
+    settingsAssetTypeInput.value = "";
+    settingsAssetTypeInput.focus();
+  }
+
+  function closeAssetTypeAddForm() {
+    if (!settingsAssetTypeForm || !settingsAssetTypeInput) {
+      return;
+    }
+
+    settingsAssetTypeForm.style.display = "none";
+    settingsAssetTypeInput.value = "";
+  }
+
+  function handleAssetTypeAdd(event) {
+    event.preventDefault();
+
+    const assetType = String(settingsAssetTypeInput ? settingsAssetTypeInput.value : "").trim();
+    if (!assetType) {
+      return;
+    }
+
+    const assetTypes = getAssetTypes();
+    const duplicate = assetTypes.some(function (existing) {
+      return existing.toLowerCase() === assetType.toLowerCase();
+    });
+
+    if (duplicate) {
+      settingsAssetTypeInput.focus();
+      settingsAssetTypeInput.select();
+      return;
+    }
+
+    saveAssetTypes(assetTypes.concat(assetType));
+    closeAssetTypeAddForm();
+    renderAssetTypeSettings();
+  }
+
+  function renameAssetType(oldAssetType, newAssetType) {
+    const oldName = String(oldAssetType || "").trim();
+    const newName = String(newAssetType || "").trim();
+
+    if (!oldName || !newName || oldName === newName) {
+      return;
+    }
+
+    const assetTypes = getAssetTypes();
+    const duplicate = assetTypes.some(function (assetType) {
+      return assetType.toLowerCase() === newName.toLowerCase()
+        && assetType.toLowerCase() !== oldName.toLowerCase();
+    });
+
+    if (duplicate) {
+      return;
+    }
+
+    getAllBuildingsIncludingArchived().forEach(function (building) {
+      if (String(building.buildingType || "").trim() !== oldName) {
+        return;
+      }
+
+      window.BuildingStorage.updateBuilding({
+        ...building,
+        buildingType: newName,
+        lastUpdated: new Date().toISOString(),
+      });
+    });
+
+    const templates = getScheduledItemTemplates();
+    let templatesChanged = false;
+
+    const updatedTemplates = templates.map(function (template) {
+      if (String(template.assetType || "").trim() !== oldName) {
+        return template;
+      }
+
+      templatesChanged = true;
+      return {
+        ...template,
+        assetType: newName,
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+
+    if (templatesChanged) {
+      saveScheduledItemTemplates(updatedTemplates);
+    }
+
+    saveAssetTypes(assetTypes.map(function (assetType) {
+      return assetType === oldName ? newName : assetType;
+    }));
+
+    renderAssetTypeSettings();
+  }
+
+  function deleteAssetType(assetType) {
+    const typeName = String(assetType || "").trim();
+    if (!typeName) {
+      return;
+    }
+
+    const usageCount = getAssetTypeUsageCount(typeName);
+
+    const message = usageCount > 0
+      ? `Delete "${typeName}"? This type is currently used by ${usageCount} ${usageCount === 1 ? "asset" : "assets"}. The type will be removed from those assets, but the assets themselves will not be deleted.`
+      : `Delete "${typeName}"?`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    getAllBuildingsIncludingArchived().forEach(function (building) {
+      if (String(building.buildingType || "").trim() !== typeName) {
+        return;
+      }
+
+      window.BuildingStorage.updateBuilding({
+        ...building,
+        buildingType: "",
+        lastUpdated: new Date().toISOString(),
+      });
+    });
+
+    const templates = getScheduledItemTemplates();
+    let templatesChanged = false;
+
+    const updatedTemplates = templates.map(function (template) {
+      if (String(template.assetType || "").trim() !== typeName) {
+        return template;
+      }
+
+      templatesChanged = true;
+      return {
+        ...template,
+        assetType: "All Assets",
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+
+    if (templatesChanged) {
+      saveScheduledItemTemplates(updatedTemplates);
+    }
+
+    saveAssetTypes(getAssetTypes().filter(function (existing) {
+      return existing !== typeName;
+    }));
+
+    renderAssetTypeSettings();
+  }
+
+  function handleAssetTypeListClick(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const row = target.closest("[data-settings-asset-type]");
+    if (!row) {
+      return;
+    }
+
+    const assetType = String(row.dataset.settingsAssetType || "").trim();
+
+    if (target.closest("[data-asset-type-rename=\"true\"]")) {
+      const title = row.querySelector("h3");
+      if (!title) {
+        return;
+      }
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = assetType;
+      input.className = "document-category-rename-input";
+
+      title.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const finishRename = function () {
+        const newName = String(input.value || "").trim();
+        if (newName && newName !== assetType) {
+          renameAssetType(assetType, newName);
+        } else {
+          renderAssetTypeSettings();
+        }
+      };
+
+      input.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Enter") {
+          keyEvent.preventDefault();
+          finishRename();
+        } else if (keyEvent.key === "Escape") {
+          renderAssetTypeSettings();
+        }
+      });
+
+      input.addEventListener("blur", finishRename, { once: true });
+      return;
+    }
+
+    if (target.closest("[data-asset-type-delete=\"true\"]")) {
+      deleteAssetType(assetType);
+    }
+  }
+
+  function renderAssetTypeSettings() {
+    if (!settingsAssetTypeList) {
+      return;
+    }
+
+    const assetTypes = getAssetTypes();
+
+    if (assetTypes.length === 0) {
+      settingsAssetTypeList.innerHTML = '<p class="module-placeholder">No asset types have been added.</p>';
+      return;
+    }
+
+    settingsAssetTypeList.innerHTML = assetTypes.map(function (assetType) {
+      const count = getAssetTypeUsageCount(assetType);
+
+      return `
+        <article class="building-card document-category-settings-row" data-settings-asset-type="${escapeHtml(assetType)}">
+          <div>
+            <h3>${escapeHtml(assetType)}</h3>
+            <p class="document-item-meta">${count} ${count === 1 ? "asset" : "assets"} using this type</p>
+          </div>
+          <div class="document-category-settings-actions">
+            <button class="btn btn-secondary" type="button" data-asset-type-rename="true">Rename</button>
+            <button class="btn btn-secondary" type="button" data-asset-type-delete="true">Delete</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
   function openDocumentCategoryAddForm() {
     if (!settingsDocumentCategoryForm || !settingsDocumentCategoryInput) {
       return;
@@ -7252,7 +7558,54 @@
     return documents.join(", ");
   }
 
-  function populateTemplateFormOptions(categoryValue, frequencyValue) {
+  function populateAssetTypeSelect(select, selectedValue, includeAllAssets) {
+    if (!(select instanceof HTMLSelectElement)) {
+      return;
+    }
+
+    const requested = String(selectedValue || "").trim();
+    const assetTypes = getAssetTypes().slice();
+
+    if (
+      requested
+      && requested !== "All Assets"
+      && !assetTypes.some(function (assetType) {
+        return assetType.toLowerCase() === requested.toLowerCase();
+      })
+    ) {
+      assetTypes.push(requested);
+    }
+
+    const options = [];
+
+    if (includeAllAssets) {
+      options.push('<option value="All Assets">All Assets</option>');
+    } else {
+      options.push('<option value="">Not specified</option>');
+    }
+
+    assetTypes.forEach(function (assetType) {
+      options.push(
+        `<option value="${escapeHtml(assetType)}">${escapeHtml(assetType)}</option>`
+      );
+    });
+
+    select.innerHTML = options.join("");
+
+    if (includeAllAssets) {
+      select.value = requested || "All Assets";
+    } else {
+      select.value = requested;
+    }
+  }
+
+  function populateTemplateFormOptions(categoryValue, frequencyValue, assetTypeValue) {
+    populateAssetTypeSelect(
+      templateForm.elements.assetType,
+      assetTypeValue || "All Assets",
+      true
+    );
+
     const categories = getDocumentCategories();
     const requestedCategory = String(categoryValue || "").trim();
     const selectedCategory = categories.includes(requestedCategory)
@@ -7278,7 +7631,11 @@
     templateForm.reset();
     templateForm.elements.templateId.value = "";
     templateForm.elements.description.value = "";
-    populateTemplateFormOptions(getDocumentCategories()[0] || "", "Annual");
+    populateTemplateFormOptions(
+      getDocumentCategories()[0] || "",
+      "Annual",
+      "All Assets"
+    );
     templateForm.elements.nextDueDate.value = "";
     templateForm.elements.defaultReminderPeriod.value = "30 days before";
     templateForm.elements.active.value = "Yes";
@@ -7536,13 +7893,16 @@
       templateForm.elements.templateId.value = template.id;
       templateForm.elements.name.value = template.name || "";
       templateForm.elements.description.value = template.description || "";
-      templateForm.elements.assetType.value = template.assetType || "All Assets";
+      populateTemplateFormOptions(
+        template.category,
+        template.defaultFrequency,
+        template.assetType || "All Assets"
+      );
       templateForm.elements.nextDueDate.value = template.nextDueDate || "";
       templateForm.elements.defaultReminderPeriod.value = template.defaultReminderPeriod || "30 days before";
       templateForm.elements.suggestedDocuments.value = getSuggestedDocumentsText(template.suggestedDocuments);
       templateForm.elements.defaultNotes.value = template.defaultNotes || "";
       templateForm.elements.active.value = template.active === "No" ? "No" : "Yes";
-      populateTemplateFormOptions(template.category, template.defaultFrequency);
     }
 
     renderTemplateLibrarySectionState("form");
@@ -8745,7 +9105,11 @@
   function populateEditForm(building) {
     editBuildingForm.elements.editBuildingId.value = building.id;
     editBuildingForm.elements.buildingName.value = building.buildingName || "";
-    editBuildingForm.elements.buildingType.value = building.buildingType || "";
+    populateAssetTypeSelect(
+      editBuildingForm.elements.buildingType,
+      building.buildingType || "",
+      false
+    );
     editBuildingForm.elements.notes.value = building.notes || "";
   }
 
@@ -13640,6 +14004,7 @@
   }
 
   activateSettingsTile(settingsPropertiesBtn, openSettingsProperties);
+  activateSettingsTile(settingsAssetTypesBtn, openSettingsAssetTypes);
   activateSettingsTile(settingsDocumentCategoriesBtn, openSettingsDocumentCategories);
   activateSettingsTile(settingsTemplatesBtn, openTemplateLibrary);
   activateSettingsTile(settingsBackupBtn, openSettingsBackup);
@@ -13649,6 +14014,22 @@
   }
 
 
+
+  if (settingsAddAssetTypeBtn) {
+    settingsAddAssetTypeBtn.addEventListener("click", openAssetTypeAddForm);
+  }
+
+  if (settingsAssetTypeForm) {
+    settingsAssetTypeForm.addEventListener("submit", handleAssetTypeAdd);
+  }
+
+  if (settingsAssetTypeCancelBtn) {
+    settingsAssetTypeCancelBtn.addEventListener("click", closeAssetTypeAddForm);
+  }
+
+  if (settingsAssetTypeList) {
+    settingsAssetTypeList.addEventListener("click", handleAssetTypeListClick);
+  }
 
   if (settingsAddDocumentCategoryBtn) {
     settingsAddDocumentCategoryBtn.addEventListener("click", openDocumentCategoryAddForm);

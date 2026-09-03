@@ -82,6 +82,11 @@
             <p class="module-placeholder">Manage your assets and add new ones.</p>
           </article>
 
+          <article id="settings-asset-types-btn" class="building-card clickable-card" role="button" tabindex="0">
+            <h3>Asset Types</h3>
+            <p class="module-placeholder">Manage the types used to organise your assets.</p>
+          </article>
+
           <article id="settings-document-categories-btn" class="building-card clickable-card" role="button" tabindex="0">
             <h3>Categories</h3>
             <p class="module-placeholder">Manage the categories used by Documents and Calendar.</p>
@@ -136,6 +141,30 @@
             <button id="properties-tab-archived" class="tab-btn" type="button">Archived</button>
           </div>
           <section id="settings-property-list" class="building-list properties-list" aria-live="polite"></section>
+        </section>
+      </section>
+
+      <section id="settings-asset-types-view" class="view" aria-labelledby="settings-asset-types-title">
+        <header class="view-header">
+          <h1 id="settings-asset-types-title">Asset Types</h1>
+          <p class="tagline">Manage the types used to organise assets throughout Home HQ.</p>
+        </header>
+
+        <section class="module-content-card section-card">
+          <div class="contacts-list-header">
+            <h3>Asset Type Directory</h3>
+            <button id="settings-add-asset-type-btn" class="btn btn-primary" type="button">+ Add Asset Type</button>
+          </div>
+
+          <form id="settings-asset-type-form" class="document-category-add-form" style="display: none;">
+            <input id="settings-asset-type-input" type="text" placeholder="Asset type name" autocomplete="off" />
+            <div class="actions-row actions-row-tight">
+              <button id="settings-asset-type-cancel-btn" class="btn btn-secondary" type="button">Cancel</button>
+              <button class="btn btn-primary" type="submit">Add Asset Type</button>
+            </div>
+          </form>
+
+          <section id="settings-asset-type-list" class="building-list" aria-live="polite"></section>
         </section>
       </section>
 
@@ -202,13 +231,9 @@
             <textarea id="templateDescription" name="description" rows="2" placeholder="Short template description"></textarea>
 
             <label for="templateAssetType">Asset Type</label>
-            <input
-              id="templateAssetType"
-              name="assetType"
-              type="text"
-              value="All Assets"
-              placeholder="e.g. All Assets, Home, Vehicle, Aircraft"
-            />
+            <select id="templateAssetType" name="assetType">
+              <option value="All Assets">All Assets</option>
+            </select>
 
             <label for="templateCategory">Category</label>
             <select id="templateCategory" name="category" required></select>
@@ -261,12 +286,9 @@
             />
 
             <label for="buildingType">Asset Type</label>
-            <input
-              id="buildingType"
-              name="buildingType"
-              type="text"
-              placeholder="e.g. Home, Vehicle, Aircraft, Personal"
-            />
+            <select id="buildingType" name="buildingType">
+              <option value="">Not specified</option>
+            </select>
 
             <label for="assetNotes">Notes</label>
             <textarea
@@ -791,7 +813,9 @@
           <input id="editBuildingName" name="buildingName" type="text" required />
 
           <label for="editBuildingType">Asset Type</label>
-          <input id="editBuildingType" name="buildingType" type="text" placeholder="e.g. Home, Vehicle, Aircraft, Personal" />
+          <select id="editBuildingType" name="buildingType">
+            <option value="">Not specified</option>
+          </select>
 
           <label for="editNotes">Notes</label>
           <textarea id="editNotes" name="notes" rows="4"></textarea>

@@ -182,6 +182,7 @@
       contacts: [],
       scheduledItemTemplates: [],
       documents: [],
+      assetTypes: null,
       documentCategories: getDefaultDocumentCategories(),
     };
   }
@@ -204,6 +205,7 @@
         contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
         scheduledItemTemplates: Array.isArray(parsed.scheduledItemTemplates) ? parsed.scheduledItemTemplates : [],
         documents: Array.isArray(parsed.documents) ? parsed.documents : [],
+        assetTypes: Array.isArray(parsed.assetTypes) ? parsed.assetTypes : null,
         documentCategories: Array.isArray(parsed.documentCategories)
           ? parsed.documentCategories
           : getDefaultDocumentCategories(),
@@ -265,6 +267,7 @@
           contacts: Array.isArray(indexedMasterData.contacts) ? indexedMasterData.contacts : [],
           scheduledItemTemplates: Array.isArray(indexedMasterData.scheduledItemTemplates) ? indexedMasterData.scheduledItemTemplates : [],
           documents: Array.isArray(indexedMasterData.documents) ? indexedMasterData.documents : [],
+          assetTypes: Array.isArray(indexedMasterData.assetTypes) ? indexedMasterData.assetTypes : null,
           documentCategories: Array.isArray(indexedMasterData.documentCategories)
             ? indexedMasterData.documentCategories
             : getDefaultDocumentCategories(),
@@ -373,6 +376,7 @@
           contacts: masterData.contacts,
           scheduledItemTemplates: masterData.scheduledItemTemplates,
           documents: masterData.documents,
+          assetTypes: Array.isArray(masterData.assetTypes) ? masterData.assetTypes : null,
           documentCategories: Array.isArray(masterData.documentCategories)
             ? masterData.documentCategories
             : getDefaultDocumentCategories(),
@@ -632,6 +636,9 @@
       documents: Array.isArray(suppliedMasterData.documents)
         ? suppliedMasterData.documents
         : [],
+      assetTypes: Array.isArray(suppliedMasterData.assetTypes)
+        ? suppliedMasterData.assetTypes
+        : null,
       documentCategories: Array.isArray(suppliedMasterData.documentCategories)
         ? suppliedMasterData.documentCategories
         : getDefaultDocumentCategories(),
