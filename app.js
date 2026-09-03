@@ -1726,12 +1726,87 @@
     renderDocumentCategorySettings();
   }
   function deleteDocumentCategory(category) {
-    if (getDocumentCategoryUsageCount(category) > 0) {
+    const categoryName = String(category || "").trim();
+
+    if (!categoryName) {
       return;
     }
 
+    const usageCount = getDocumentCategoryUsageCount(categoryName);
+
+    const message = usageCount > 0
+      ? `Delete "${categoryName}"? This category is currently used by ${usageCount} ${usageCount === 1 ? "item" : "items"}. The category will be removed from those items, but the items themselves will not be deleted.`
+      : `Delete "${categoryName}"?`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    getAllBuildingsIncludingArchived().forEach(function (building) {
+      const normalized = ensureWorkflowCollections(building);
+      let changed = false;
+
+      (normalized.documents || []).forEach(function (record) {
+        if (getDocumentRegisterCategory({
+          building: normalized,
+          record: record,
+          source: "building",
+        }) === categoryName) {
+          record.category = "";
+          changed = true;
+        }
+      });
+
+      const tenancy = normalized.tenancy;
+      const leaseDocuments = tenancy && tenancy.lease && Array.isArray(tenancy.lease.documents)
+        ? tenancy.lease.documents
+        : [];
+
+      leaseDocuments.forEach(function (record) {
+        if (getDocumentRegisterCategory({
+          building: normalized,
+          record: record,
+          source: "tenancy",
+        }) === categoryName) {
+          record.category = "";
+          changed = true;
+        }
+      });
+
+      (normalized.scheduleItems || []).forEach(function (item) {
+        if (String(item.category || "").trim() === categoryName) {
+          item.category = "";
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        window.BuildingStorage.updateBuilding(normalized);
+      }
+    });
+
+    const templates = getScheduledItemTemplates();
+    let templatesChanged = false;
+
+    const updatedTemplates = templates.map(function (template) {
+      if (String(template.category || "").trim() !== categoryName) {
+        return template;
+      }
+
+      templatesChanged = true;
+      return {
+        ...template,
+        category: "",
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+
+    if (templatesChanged) {
+      saveScheduledItemTemplates(updatedTemplates);
+    }
+
     saveDocumentCategories(getDocumentCategories().filter(function (existing) {
-      return existing !== category;
+      return existing !== categoryName;
     }));
 
     renderDocumentCategorySettings();
@@ -1810,7 +1885,7 @@
           </div>
           <div class="document-category-settings-actions">
             <button class="btn btn-secondary" type="button" data-document-category-rename="true">Rename</button>
-            <button class="btn btn-secondary" type="button" data-document-category-delete="true"${count > 0 ? " disabled" : ""}>Delete</button>
+            <button class="btn btn-secondary" type="button" data-document-category-delete="true">Delete</button>
           </div>
         </article>
       `;
