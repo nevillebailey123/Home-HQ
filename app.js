@@ -11456,6 +11456,194 @@
     }, 2400);
   }
 
+  function showAddCalendarItemDialog(building) {
+    return new Promise(function (resolve) {
+      if (!building) {
+        resolve(null);
+        return;
+      }
+
+      const backdrop = window.document.createElement("div");
+      backdrop.className = "template-delete-modal-backdrop";
+
+      const dialog = window.document.createElement("div");
+      dialog.className = "template-delete-modal template-master-create-modal";
+      dialog.setAttribute("role", "dialog");
+      dialog.setAttribute("aria-modal", "true");
+      dialog.setAttribute("aria-labelledby", "add-calendar-item-title");
+
+      dialog.innerHTML = `
+        <h3 id="add-calendar-item-title">Add Calendar Item</h3>
+        <form class="template-master-create-form" data-add-calendar-item-form>
+          <label>
+            <span>Title</span>
+            <input name="title" type="text" required />
+          </label>
+
+          <label>
+            <span>Category</span>
+            <select name="category">
+              ${getDocumentCategories().map(function (option) {
+                return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
+              }).join("")}
+            </select>
+          </label>
+
+          <label>
+            <span>Due Date</span>
+            <input name="dueDate" type="date" required />
+          </label>
+
+          <label>
+            <span>Frequency</span>
+            <select name="frequency">
+              ${TEMPLATE_FREQUENCY_OPTIONS.map(function (option) {
+                const selected = option === "One-off" ? " selected" : "";
+                return `<option value="${option}"${selected}>${option}</option>`;
+              }).join("")}
+            </select>
+          </label>
+
+          <label>
+            <span>Primary Contact</span>
+            <select name="primaryContactId">
+              ${renderSchedulePrimaryContactOptions(building, "")}
+            </select>
+          </label>
+
+          <label>
+            <span>Notes</span>
+            <textarea name="notes" rows="3"></textarea>
+          </label>
+
+          <div class="template-delete-modal-actions">
+            <button class="btn btn-secondary" type="button" data-add-calendar-item-action="cancel">Cancel</button>
+            <button class="btn btn-primary" type="submit">Add Calendar Item</button>
+          </div>
+        </form>
+      `;
+
+      backdrop.appendChild(dialog);
+      window.document.body.appendChild(backdrop);
+
+      function closeWith(value) {
+        window.document.removeEventListener("keydown", handleEscape);
+        backdrop.remove();
+        resolve(value || null);
+      }
+
+      function handleEscape(event) {
+        if (event.key === "Escape") {
+          closeWith(null);
+        }
+      }
+
+      window.document.addEventListener("keydown", handleEscape);
+
+      backdrop.addEventListener("click", function (event) {
+        if (event.target === backdrop) {
+          closeWith(null);
+        }
+      });
+
+      dialog.addEventListener("click", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+
+        if (target.getAttribute("data-add-calendar-item-action") === "cancel") {
+          closeWith(null);
+        }
+      });
+
+      const form = dialog.querySelector("[data-add-calendar-item-form]");
+      if (form instanceof HTMLFormElement) {
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const formData = new FormData(form);
+          const title = String(formData.get("title") || "").trim();
+          const dueDate = String(formData.get("dueDate") || "").trim();
+          const frequency = String(formData.get("frequency") || "One-off").trim() || "One-off";
+
+          if (!title || !dueDate) {
+            form.reportValidity();
+            return;
+          }
+
+          closeWith({
+            title: title,
+            category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
+            dueDate: dueDate,
+            frequency: frequency,
+            preferredContactId: String(formData.get("primaryContactId") || "").trim(),
+            notes: String(formData.get("notes") || "").trim(),
+          });
+        });
+      }
+
+      const titleInput = form && form.elements ? form.elements.namedItem("title") : null;
+      if (titleInput instanceof HTMLInputElement) {
+        titleInput.focus();
+      }
+    });
+  }
+
+  async function handleAddCalendarItem() {
+    if (!activeBuildingId) {
+      alert("Select an asset before adding a calendar item.");
+      return;
+    }
+
+    const building = findBuildingById(activeBuildingId);
+    if (!building) {
+      return;
+    }
+
+    const values = await showAddCalendarItemDialog(building);
+    if (!values) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    const propertyTemplate = createPropertyTemplateFromMaster(null, {
+      propertyId: String(building.id || "").trim(),
+      name: values.title,
+      category: values.category,
+      defaultFrequency: values.frequency,
+      initialDueDate: values.dueDate,
+      nextDueDate: values.dueDate,
+      defaultNotes: values.notes,
+      preferredContactId: values.preferredContactId,
+      active: "Yes",
+      createdDate: now,
+      lastUpdated: now,
+    });
+
+    const scheduleItem = createScheduleItemFromPropertyTemplate(
+      propertyTemplate,
+      building.id,
+      now
+    );
+
+    scheduleItem.preferredContactId = values.preferredContactId;
+    scheduleItem.status = getScheduleStatusText(scheduleItem);
+
+    const normalizedBuilding = ensureWorkflowCollections(building);
+    const updatedBuilding = {
+      ...normalizedBuilding,
+      propertyTemplates: getPropertyTemplates(normalizedBuilding).concat(propertyTemplate),
+      scheduleItems: (normalizedBuilding.scheduleItems || []).concat(scheduleItem),
+      lastUpdated: now,
+    };
+
+    persistBuildingWithWorkflowSync(updatedBuilding);
+    renderBuildings();
+    openScheduleView(building.id);
+  }
+
   async function handleManageTemplatesForProperty() {
     if (!activeBuildingId) {
       alert("Select an asset before managing templates for its calendar.");
@@ -13881,7 +14069,7 @@
 
   cancelBtn.addEventListener("click", handleSetupCancel);
   companiesBackBtn.addEventListener("click", handleCompaniesBack);
-  manageTemplatesBtn.addEventListener("click", handleManageTemplatesForProperty);
+  manageTemplatesBtn.addEventListener("click", handleAddCalendarItem);
   historyBackBtn.addEventListener("click", handleHistoryBack);
   editBuildingBtn.addEventListener("click", handleOpenEdit);
   cancelEditBtn.addEventListener("click", handleCancelEdit);
