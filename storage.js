@@ -182,6 +182,9 @@
       contacts: [],
       scheduledItemTemplates: [],
       documents: [],
+      generalPropertyTemplates: [],
+      generalScheduleItems: [],
+      generalHistoryRecords: [],
       assetTypes: null,
       documentCategories: getDefaultDocumentCategories(),
     };
@@ -205,6 +208,9 @@
         contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
         scheduledItemTemplates: Array.isArray(parsed.scheduledItemTemplates) ? parsed.scheduledItemTemplates : [],
         documents: Array.isArray(parsed.documents) ? parsed.documents : [],
+        generalPropertyTemplates: Array.isArray(parsed.generalPropertyTemplates) ? parsed.generalPropertyTemplates : [],
+        generalScheduleItems: Array.isArray(parsed.generalScheduleItems) ? parsed.generalScheduleItems : [],
+        generalHistoryRecords: Array.isArray(parsed.generalHistoryRecords) ? parsed.generalHistoryRecords : [],
         assetTypes: Array.isArray(parsed.assetTypes) ? parsed.assetTypes : null,
         documentCategories: Array.isArray(parsed.documentCategories)
           ? parsed.documentCategories
@@ -635,6 +641,15 @@
         : [],
       documents: Array.isArray(suppliedMasterData.documents)
         ? suppliedMasterData.documents
+        : [],
+      generalPropertyTemplates: Array.isArray(suppliedMasterData.generalPropertyTemplates)
+        ? suppliedMasterData.generalPropertyTemplates
+        : [],
+      generalScheduleItems: Array.isArray(suppliedMasterData.generalScheduleItems)
+        ? suppliedMasterData.generalScheduleItems
+        : [],
+      generalHistoryRecords: Array.isArray(suppliedMasterData.generalHistoryRecords)
+        ? suppliedMasterData.generalHistoryRecords
         : [],
       assetTypes: Array.isArray(suppliedMasterData.assetTypes)
         ? suppliedMasterData.assetTypes

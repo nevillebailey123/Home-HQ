@@ -5101,10 +5101,17 @@
       const diffDays = getScheduleDiffDays(item);
       const lastCompletionRecord = getPendingRevertRecord(building, item);
       const itemPropertyId = String(item.propertyId || "").trim();
-      const itemPropertyName = itemPropertyId
-        ? getBuildingNameById(itemPropertyId) || "Asset not assigned"
-        : "Asset not assigned";
+      const isGeneralItem = isGeneralScheduleContext(building);
+      const itemPropertyName = isGeneralItem
+        ? "General / No Asset"
+        : itemPropertyId
+          ? getBuildingNameById(itemPropertyId) || "Asset not assigned"
+          : "Asset not assigned";
+      const scheduleContextId = isGeneralItem
+        ? GENERAL_SCHEDULE_CONTEXT_ID
+        : itemPropertyId;
       const visualPriority = getScheduleVisualPriority(item, diffDays);
+
       return {
         item: item,
         state: getScheduleRowState(diffDays),
@@ -5113,6 +5120,7 @@
         diffDays: diffDays,
         category: getScheduleItemCategory(building, item),
         propertyId: itemPropertyId,
+        scheduleContextId: scheduleContextId,
         propertyName: itemPropertyName,
         lastCompletedDate: String(item.lastCompletedDate || "").trim(),
         lastCompletionRecord: lastCompletionRecord,
@@ -5120,11 +5128,75 @@
     });
   }
 
+  const GENERAL_SCHEDULE_CONTEXT_ID = "__general__";
+
+  function getGeneralScheduleContext() {
+    const masterData = getMasterData();
+
+    return ensureWorkflowCollections({
+      id: GENERAL_SCHEDULE_CONTEXT_ID,
+      buildingName: "General",
+      propertyTemplates: Array.isArray(masterData.generalPropertyTemplates)
+        ? masterData.generalPropertyTemplates
+        : [],
+      scheduleItems: Array.isArray(masterData.generalScheduleItems)
+        ? masterData.generalScheduleItems
+        : [],
+      historyRecords: Array.isArray(masterData.generalHistoryRecords)
+        ? masterData.generalHistoryRecords
+        : [],
+      documents: [],
+      tenancies: [],
+      tenancy: null,
+    });
+  }
+
+  function isGeneralScheduleContext(building) {
+    return Boolean(
+      building &&
+      String(building.id || "") === GENERAL_SCHEDULE_CONTEXT_ID
+    );
+  }
+
+  function getScheduleContextById(contextId) {
+    if (String(contextId || "") === GENERAL_SCHEDULE_CONTEXT_ID) {
+      return getGeneralScheduleContext();
+    }
+
+    const building = findBuildingById(contextId);
+    return building ? ensureWorkflowCollections(building) : null;
+  }
+
+  function persistScheduleContext(building) {
+    const normalized = ensureWorkflowCollections(building);
+
+    if (!isGeneralScheduleContext(normalized)) {
+      window.BuildingStorage.updateBuilding(normalized);
+      return normalized;
+    }
+
+    const masterData = getMasterData();
+
+    window.BuildingStorage.saveMasterData({
+      ...masterData,
+      generalPropertyTemplates: getPropertyTemplates(normalized),
+      generalScheduleItems: Array.isArray(normalized.scheduleItems)
+        ? normalized.scheduleItems
+        : [],
+      generalHistoryRecords: Array.isArray(normalized.historyRecords)
+        ? normalized.historyRecords
+        : [],
+    });
+
+    return getGeneralScheduleContext();
+  }
+
   function getNormalizedScheduleBuildings() {
-    const buildings = window.BuildingStorage.getBuildings();
-    return buildings.map(function (building) {
+    const buildings = window.BuildingStorage.getBuildings().map(function (building) {
       return ensureWorkflowCollections(building);
     });
+
+    return buildings.concat(getGeneralScheduleContext());
   }
 
   function confirmScheduleRevertDialog() {
@@ -5307,8 +5379,7 @@
     };
 
     const normalized = ensureWorkflowCollections(updated);
-    window.BuildingStorage.updateBuilding(normalized);
-    return normalized;
+    return persistScheduleContext(normalized);
   }
 
   function revertTemplateCompletion(building, scheduleItem, historyRecord) {
@@ -5370,8 +5441,7 @@
     };
 
     const normalized = ensureWorkflowCollections(updated);
-    window.BuildingStorage.updateBuilding(normalized);
-    return normalized;
+    return persistScheduleContext(normalized);
   }
 
   function renderScheduleRow(row) {
@@ -5379,7 +5449,7 @@
     const statusClass = `schedule-row-status-${row.visualPriority}`;
     const isTenancyItem = row.item.sourceType === "tenancy";
     const isDocumentItem = row.item.sourceType === "document";
-    const propertyMarkup = `<p class="schedule-row-meta">Asset: ${escapeHtml(row.propertyName || "Asset not assigned")}</p>`;
+    const propertyMarkup = `<p class="schedule-row-meta">Asset: ${escapeHtml(row.propertyName || "General / No Asset")}</p>`;
     const lastCompletedMarkup = `<p class="schedule-row-meta">Last Completed: ${escapeHtml(formatLastCompletedDate(row.lastCompletedDate))}</p>`;
     const dueDateMarkup = `<p class="schedule-row-due ${dueClass}">Next Due Date: ${formatDate(row.item.dueDate)}</p>`;
     const statusMarkup = `<p class="schedule-row-status ${statusClass}">Status: ${escapeHtml(row.statusText)}</p>`;
@@ -5406,7 +5476,7 @@
       : `<p class="schedule-row-meta">Frequency: ${escapeHtml(row.item.frequency)}</p>`;
 
     return `
-      <article class="schedule-ops-row schedule-ops-row-${row.state} schedule-ops-priority-${row.visualPriority}" data-schedule-id="${row.item.id}" data-schedule-building-id="${row.propertyId}" role="button" tabindex="0" aria-label="Open schedule details for ${escapeHtml(row.item.taskName)}">
+      <article class="schedule-ops-row schedule-ops-row-${row.state} schedule-ops-priority-${row.visualPriority}" data-schedule-id="${row.item.id}" data-schedule-building-id="${row.scheduleContextId || row.propertyId}" role="button" tabindex="0" aria-label="Open schedule details for ${escapeHtml(row.item.taskName)}">
         <span class="schedule-ops-marker" aria-hidden="true"></span>
         <div class="schedule-ops-main">
           <h3 class="schedule-row-title">${escapeHtml(row.item.taskName)}</h3>
@@ -11458,11 +11528,6 @@
 
   function showAddCalendarItemDialog(building) {
     return new Promise(function (resolve) {
-      if (!building) {
-        resolve(null);
-        return;
-      }
-
       const backdrop = window.document.createElement("div");
       backdrop.className = "template-delete-modal-backdrop";
 
@@ -11478,6 +11543,17 @@
           <label>
             <span>Title</span>
             <input name="title" type="text" required />
+          </label>
+
+          <label>
+            <span>Asset</span>
+            <select name="propertyId">
+              <option value="">General / No Asset</option>
+              ${window.BuildingStorage.getBuildings().map(function (optionBuilding) {
+                const selected = String(optionBuilding.id || "") === String(building && building.id || "") ? " selected" : "";
+                return `<option value="${optionBuilding.id}"${selected}>${escapeHtml(optionBuilding.buildingName)}</option>`;
+              }).join("")}
+            </select>
           </label>
 
           <label>
@@ -11574,6 +11650,7 @@
 
           closeWith({
             title: title,
+            propertyId: String(formData.get("propertyId") || "").trim(),
             category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
             dueDate: dueDate,
             frequency: frequency,
@@ -11591,25 +11668,25 @@
   }
 
   async function handleAddCalendarItem() {
-    if (!activeBuildingId) {
-      alert("Select an asset before adding a calendar item.");
-      return;
-    }
+    const initialBuilding = activeBuildingId ? findBuildingById(activeBuildingId) : null;
 
-    const building = findBuildingById(activeBuildingId);
-    if (!building) {
-      return;
-    }
-
-    const values = await showAddCalendarItemDialog(building);
+    const values = await showAddCalendarItemDialog(initialBuilding);
     if (!values) {
+      return;
+    }
+
+    const propertyId = String(values.propertyId || "").trim();
+    const building = propertyId ? findBuildingById(propertyId) : null;
+
+    if (propertyId && !building) {
+      alert("The selected asset could not be found.");
       return;
     }
 
     const now = new Date().toISOString();
 
     const propertyTemplate = createPropertyTemplateFromMaster(null, {
-      propertyId: String(building.id || "").trim(),
+      propertyId: propertyId,
       name: values.title,
       category: values.category,
       defaultFrequency: values.frequency,
@@ -11624,12 +11701,27 @@
 
     const scheduleItem = createScheduleItemFromPropertyTemplate(
       propertyTemplate,
-      building.id,
+      propertyId,
       now
     );
 
+    scheduleItem.propertyId = propertyId;
     scheduleItem.preferredContactId = values.preferredContactId;
     scheduleItem.status = getScheduleStatusText(scheduleItem);
+
+    if (!building) {
+      const masterData = getMasterData();
+
+      window.BuildingStorage.saveMasterData({
+        ...masterData,
+        generalPropertyTemplates: (masterData.generalPropertyTemplates || []).concat(propertyTemplate),
+        generalScheduleItems: (masterData.generalScheduleItems || []).concat(scheduleItem),
+      });
+
+      renderBuildings();
+      openScheduleView("");
+      return;
+    }
 
     const normalizedBuilding = ensureWorkflowCollections(building);
     const updatedBuilding = {
@@ -11852,7 +11944,7 @@
   }
 
   function renderSchedulePrimaryContactOptions(building, selectedContactId) {
-    const contacts = getContactsForBuilding(building);
+    const contacts = building ? getContactsForBuilding(building) : dedupeContacts(getContacts());
     return ['<option value="">Not set</option>']
       .concat(contacts.map(function (contact) {
         const relationship = getBuildingRelationshipForContact(building, contact);
@@ -12818,7 +12910,7 @@
             <h4>Calendar Details</h4>
           </div>
           <dl class="schedule-details-grid" data-schedule-details-display>
-            <div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Asset not assigned")}</dd></div>
+            ${getBuildingNameById(propertyValue) ? `<div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue))}</dd></div>` : ""}
             <div><dt>Frequency</dt><dd>${escapeHtml(frequencyDisplay)}</dd></div>
             ${scheduledDatesMarkup}
             <div><dt>Category</dt><dd>${escapeHtml(categoryValue)}</dd></div>
@@ -12996,7 +13088,7 @@
   }
 
   async function showScheduleCompleteDialog(buildingId, itemId) {
-    const building = findBuildingById(buildingId);
+    const building = getScheduleContextById(buildingId);
     if (!building) {
       return;
     }
@@ -13065,7 +13157,7 @@
 
   async function openScheduleDetailsDialog(buildingId, itemId, showSavedConfirmation, mode) {
     const viewMode = mode === "edit" ? "edit" : "details";
-    const building = findBuildingById(buildingId);
+    const building = getScheduleContextById(buildingId);
     if (!building) {
       return;
     }

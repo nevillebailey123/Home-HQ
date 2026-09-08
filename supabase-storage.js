@@ -493,6 +493,9 @@ async function loadApplicationData() {
       contacts: contacts,
       scheduledItemTemplates: scheduledItemTemplates,
       documents: [],
+      generalPropertyTemplates: propertyTemplatesByProperty.get(null) || [],
+      generalScheduleItems: scheduleByProperty.get(null) || [],
+      generalHistoryRecords: historyByProperty.get(null) || [],
       assetTypes: assetTypes,
       documentCategories: documentCategories,
     },
@@ -945,6 +948,63 @@ async function syncCurrentApplicationData() {
     });
   });
 
+  (master.generalPropertyTemplates || []).forEach(function (template) {
+    propertyTemplates.push({
+      id: String(template.id),
+      property_id: null,
+      master_template_id: template.masterTemplateId || template.templateId || null,
+      name: template.name || template.taskName || "",
+      category: template.category || "General",
+      frequency: template.frequency || "",
+      preferred_company_id: template.preferredCompanyId || null,
+      preferred_contact_id: template.preferredContactId || null,
+      data: template,
+      created_at: cleanTimestamp(template.createdDate),
+      updated_at: cleanTimestamp(template.lastUpdated),
+    });
+  });
+
+  (master.generalScheduleItems || []).forEach(function (item) {
+    scheduleItems.push({
+      id: String(item.id),
+      property_id: null,
+      tenancy_id: null,
+      property_template_id: item.propertyTemplateId || item.templateId || null,
+      task_name: item.taskName || "",
+      category: item.category || "General",
+      due_date: cleanDate(item.dueDate),
+      frequency: item.frequency || "",
+      preferred_company_id: item.preferredCompanyId || null,
+      preferred_contact_id: item.preferredContactId || null,
+      source_type: item.sourceType || "",
+      source_id: item.sourceId || item.documentId || "",
+      status: item.status || "",
+      last_completion_history_id: item.lastCompletionHistoryId || null,
+      data: item,
+      created_at: cleanTimestamp(item.createdDate),
+      updated_at: cleanTimestamp(item.lastUpdated),
+    });
+  });
+
+  (master.generalHistoryRecords || []).forEach(function (record) {
+    historyRecords.push({
+      id: String(record.id),
+      property_id: null,
+      schedule_item_id: record.scheduleItemId || null,
+      completed_at: cleanDate(
+        record.completedAt ||
+        record.completedDate ||
+        record.date
+      ),
+      data: record,
+      created_at: cleanTimestamp(
+        record.createdDate ||
+        record.completedAt ||
+        record.completedDate
+      ),
+    });
+  });
+
   await upsertMigrationRows("app_settings", appSettings);
   await upsertMigrationRows("companies", companies);
   await upsertMigrationRows("contacts", contacts);
@@ -1290,6 +1350,63 @@ async function migrateExistingBrowserData() {
           ? building.contactRelationshipById[contactId]
           : "",
       });
+    });
+  });
+
+  (master.generalPropertyTemplates || []).forEach(function (template) {
+    propertyTemplates.push({
+      id: String(template.id),
+      property_id: null,
+      master_template_id: template.masterTemplateId || template.templateId || null,
+      name: template.name || template.taskName || "",
+      category: template.category || "General",
+      frequency: template.frequency || "",
+      preferred_company_id: template.preferredCompanyId || null,
+      preferred_contact_id: template.preferredContactId || null,
+      data: template,
+      created_at: cleanTimestamp(template.createdDate),
+      updated_at: cleanTimestamp(template.lastUpdated),
+    });
+  });
+
+  (master.generalScheduleItems || []).forEach(function (item) {
+    scheduleItems.push({
+      id: String(item.id),
+      property_id: null,
+      tenancy_id: null,
+      property_template_id: item.propertyTemplateId || item.templateId || null,
+      task_name: item.taskName || "",
+      category: item.category || "General",
+      due_date: cleanDate(item.dueDate),
+      frequency: item.frequency || "",
+      preferred_company_id: item.preferredCompanyId || null,
+      preferred_contact_id: item.preferredContactId || null,
+      source_type: item.sourceType || "",
+      source_id: item.sourceId || item.documentId || "",
+      status: item.status || "",
+      last_completion_history_id: item.lastCompletionHistoryId || null,
+      data: item,
+      created_at: cleanTimestamp(item.createdDate),
+      updated_at: cleanTimestamp(item.lastUpdated),
+    });
+  });
+
+  (master.generalHistoryRecords || []).forEach(function (record) {
+    historyRecords.push({
+      id: String(record.id),
+      property_id: null,
+      schedule_item_id: record.scheduleItemId || null,
+      completed_at: cleanDate(
+        record.completedAt ||
+        record.completedDate ||
+        record.date
+      ),
+      data: record,
+      created_at: cleanTimestamp(
+        record.createdDate ||
+        record.completedAt ||
+        record.completedDate
+      ),
     });
   });
 
