@@ -273,6 +273,9 @@
           contacts: Array.isArray(indexedMasterData.contacts) ? indexedMasterData.contacts : [],
           scheduledItemTemplates: Array.isArray(indexedMasterData.scheduledItemTemplates) ? indexedMasterData.scheduledItemTemplates : [],
           documents: Array.isArray(indexedMasterData.documents) ? indexedMasterData.documents : [],
+          generalPropertyTemplates: Array.isArray(indexedMasterData.generalPropertyTemplates) ? indexedMasterData.generalPropertyTemplates : [],
+          generalScheduleItems: Array.isArray(indexedMasterData.generalScheduleItems) ? indexedMasterData.generalScheduleItems : [],
+          generalHistoryRecords: Array.isArray(indexedMasterData.generalHistoryRecords) ? indexedMasterData.generalHistoryRecords : [],
           assetTypes: Array.isArray(indexedMasterData.assetTypes) ? indexedMasterData.assetTypes : null,
           documentCategories: Array.isArray(indexedMasterData.documentCategories)
             ? indexedMasterData.documentCategories
