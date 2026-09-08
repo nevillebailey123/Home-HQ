@@ -4589,22 +4589,4 @@ body.settings-active #app-property-selector {
   z-index: 100;
   background: #0f141c;
   padding-top: 0.25rem;
-}
-
-/* Calendar: use normal page scrolling */
-#schedule-view.is-active {
-  display: block;
-  height: auto;
-  min-height: 0;
-  overflow: visible;
-}
-
-#schedule-view > .schedule-operations-card {
-  display: block;
-  overflow: visible;
-}
-
-#schedule-view .schedule-ops-list {
-  overflow: visible;
-  max-height: none;
-}
+}\n
