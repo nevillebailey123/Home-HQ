@@ -5276,7 +5276,11 @@
     }
 
     const previousDueDate = String(template.nextDueDate || scheduleItem.dueDate || "").trim();
-    const newDueDate = getNextDueDatePlaceholder(previousDueDate, template.defaultFrequency || scheduleItem.frequency, template.customRecurringDates, false);
+    const frequency = String(template.defaultFrequency || scheduleItem.frequency || "").trim();
+    const isOneOff = frequency === "One-off";
+    const newDueDate = isOneOff
+      ? ""
+      : getNextDueDatePlaceholder(previousDueDate, frequency, template.customRecurringDates, false);
     const completedAt = options.completedAt || new Date().toISOString();
     const completedBy = options.completedBy || "Home HQ";
     const historyId = window.BuildingStorage.createId();
