@@ -3874,7 +3874,9 @@
       propertyTemplateId: template.id,
       propertyId: normalizedPropertyId,
       taskName: taskName,
-      category: template.category || "General",
+      category: Object.prototype.hasOwnProperty.call(template, "category")
+        ? String(template.category || "").trim()
+        : "General",
       dueDate: String(template.nextDueDate || "").trim(),
       frequency: template.defaultFrequency || "Annual",
       preferredCompany: "",
@@ -11559,6 +11561,7 @@
           <label>
             <span>Category</span>
             <select name="category">
+              <option value="" selected>No Category</option>
               ${getDocumentCategories().map(function (option) {
                 return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
               }).join("")}
@@ -11651,7 +11654,7 @@
           closeWith({
             title: title,
             propertyId: String(formData.get("propertyId") || "").trim(),
-            category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
+            category: String(formData.get("category") || "").trim(),
             dueDate: dueDate,
             frequency: frequency,
             preferredContactId: String(formData.get("primaryContactId") || "").trim(),
