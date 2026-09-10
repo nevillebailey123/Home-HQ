@@ -605,6 +605,7 @@
   function setActiveAppModule(moduleKey) {
     activeAppModule = APP_MODULE_KEYS.indexOf(moduleKey) === -1 ? "" : moduleKey;
     document.body.classList.toggle("settings-active", activeAppModule === "settings");
+    document.body.classList.toggle("calendar-active", activeAppModule === "Schedule");
     // Shell pages keep the main navigation visible. Settings hides the Property selector because it is application-wide.
     setAppShellVisible(true);
     renderAllBuildingFilterSelects();

@@ -4644,3 +4644,85 @@ body.settings-active #app-property-selector {
     grid-row: auto;
   }
 }
+
+/* =========================================================
+   Calendar workspace final layout fix
+   Header + Calendar controls remain visible.
+   Only Calendar Items scroll.
+   ========================================================= */
+
+#schedule-view.is-active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 205px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+#schedule-view > .view-header {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+  padding-top: 0.75rem;
+}
+
+#schedule-view > .schedule-operations-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#schedule-view .schedule-filter-row {
+  flex: 0 0 auto;
+}
+
+#schedule-view .schedule-ops-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Keep Add Calendar Item aligned and fully visible */
+#schedule-view .schedule-header-actions {
+  flex: 0 0 180px;
+  width: 180px;
+  min-width: 180px;
+}
+
+#manage-templates-btn {
+  width: 180px;
+  min-width: 180px;
+  height: 42px;
+  margin: 0;
+  padding: 0 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 0.92rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   Calendar: lock outer document
+   Only the Calendar Items list should scroll
+   ========================================================= */
+
+html:has(body.calendar-active),
+body.calendar-active {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.calendar-active .app-shell {
+  height: 100dvh;
+  overflow: hidden;
+}
+
