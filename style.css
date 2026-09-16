@@ -3918,6 +3918,15 @@ h3.document-register-row-title {
   flex: 0 0 auto;
 }
 
+/* Contact forms share the fixed workspace and must scroll independently. */
+#contacts-view > #contact-form-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 #contacts-view > #contacts-list-card {
   flex: 1 1 auto;
   min-height: 0;
