@@ -47,7 +47,7 @@
     return result.data.session || null;
   }
 
-  const DOCUMENT_BUCKET = "document-files";
+  const DOCUMENT_BUCKET = "documents";
 
   async function uploadDocumentFile(file, documentId) {
     if (!file) {
