@@ -4815,3 +4815,9 @@ body.settings-active .page-asset-filter-row { display: none; }
   #contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: minmax(0, 1fr); }
   .page-add-action { width: 100%; }
 }
+
+/* Calendar uses only asset and due-period filters beside its Add action. */
+#schedule-view .schedule-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
+@media (max-width: 600px) {
+  #schedule-view .schedule-filter-row { grid-template-columns: minmax(0, 1fr); }
+}

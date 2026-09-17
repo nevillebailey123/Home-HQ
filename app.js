@@ -154,7 +154,6 @@
   const completeTaskName = document.getElementById("complete-task-name");
   const scheduleOpsList = document.getElementById("schedule-ops-list");
   const scheduleFilterCategory = document.getElementById("schedule-filter-category");
-  const scheduleSearch = document.getElementById("schedule-search");
   const scheduleFilterDuePeriod = document.getElementById("schedule-filter-due-period");
   const historyList = document.getElementById("history-list");
   const cancelCompleteTaskBtn = document.getElementById("cancel-complete-task-btn");
@@ -246,7 +245,6 @@
   let scheduleFilters = {
     property: "",
     category: "all",
-    search: "",
     duePeriod: "all",
   };
   let tenancyEditBuildingId = "";
@@ -5053,10 +5051,6 @@
   function filterScheduleRows(rows) {
     return rows.filter(function (row) {
       if (scheduleFilters.property && row.propertyId !== scheduleFilters.property) {
-        return false;
-      }
-      const query = normalizeText(scheduleFilters.search).trim();
-      if (query && !normalizeText(row.item.taskName).includes(query)) {
         return false;
       }
       if (!matchesScheduleDuePeriod(row.diffDays, row.item.dueDate, scheduleFilters.duePeriod)) {
@@ -13656,7 +13650,6 @@
     scheduleFilters = {
       property: scheduleFilters.property,
       category: String(scheduleFilterCategory.value || "all"),
-      search: String(scheduleSearch.value || ""),
       duePeriod: String(scheduleFilterDuePeriod.value || "all"),
     };
 
@@ -14401,7 +14394,6 @@
   scheduleOpsList.addEventListener("click", handleScheduleListClick);
   scheduleOpsList.addEventListener("keydown", handleScheduleListKeydown);
   scheduleFilterCategory.addEventListener("change", handleScheduleFilterChange);
-  scheduleSearch.addEventListener("input", handleScheduleFilterChange);
   scheduleFilterDuePeriod.addEventListener("change", handleScheduleFilterChange);
   historyList.addEventListener("click", handleHistoryListClick);
   historyList.addEventListener("keydown", handleHistoryListKeydown);
