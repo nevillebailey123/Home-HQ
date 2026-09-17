@@ -4793,3 +4793,5 @@ body.settings-active .page-asset-filter-row { display: none; }
   #contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: minmax(0, 1fr); }
   .page-asset-filter-row { max-width: none; }
 }
+
+#schedule-search { box-sizing: border-box; min-width: 0; margin: 0; border-color: var(--accent); }

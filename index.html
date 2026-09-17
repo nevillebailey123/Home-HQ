@@ -723,15 +723,6 @@
               <select id="schedule-filter-category" class="schedule-filter-select"></select>
             </label>
             <label>
-              <span class="schedule-filter-label">Status</span>
-              <select id="schedule-filter-status" class="schedule-filter-select">
-                <option value="all">All</option>
-                <option value="overdue">Overdue</option>
-                <option value="due30">Due Within 30 Days</option>
-                <option value="scheduled">Scheduled</option>
-              </select>
-            </label>
-            <label>
               <span class="schedule-filter-label">Due Period</span>
               <select id="schedule-filter-due-period" class="schedule-filter-select">
                 <option value="all">All</option>
@@ -741,6 +732,10 @@
                 <option value="this-month">This Month</option>
                 <option value="overdue">Overdue</option>
               </select>
+            </label>
+            <label for="schedule-search">
+              <span class="schedule-filter-label">Search</span>
+              <input id="schedule-search" class="schedule-filter-select" type="search" placeholder="Search calendar items" />
             </label>
           </div>
 
@@ -850,7 +845,7 @@
     <script src="supabase-storage.js?v=10"></script>
     <script src="indexeddb-storage.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js?v=32"></script>
+    <script src="app.js?v=33"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async function () {
