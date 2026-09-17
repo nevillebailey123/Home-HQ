@@ -6478,7 +6478,10 @@
     }
   }
 
+  let pendingDocumentUpload = null;
+
   function openDocumentForm(mode, entry) {
+    pendingDocumentUpload = null;
     activeDocumentFormMode = mode;
     activeDocumentContext = entry || null;
     documentFormFilterBuildingId = getBuildingFilterId();
@@ -6583,6 +6586,7 @@
   }
 
   function closeDocumentForm() {
+    pendingDocumentUpload = null;
     const filterId = documentFormFilterBuildingId;
     activeDocumentFormMode = "";
     activeDocumentContext = null;
@@ -6591,6 +6595,14 @@
     leaseCategoryFilterValue = documentFormCategory;
     renderLeasePage();
     showLeaseView();
+  }
+
+  async function confirmDocumentSave(payload, buildingId) {
+    const result = await window.BuildingStorage.waitForSupabaseSync();
+    if (!result || result.success !== true || result.skipped) {
+      throw new Error((result && result.reason) || "Document synchronization did not complete. Please retry Save.");
+    }
+    await window.ComplianceHQSupabase.verifyDocumentSaved(payload.id, buildingId, payload.storage.path || "");
   }
 
   async function handleSaveDocument(event) {
@@ -6627,7 +6639,8 @@
       const now = new Date().toISOString();
       const documentId = existing && existing.id
         ? existing.id
-        : window.BuildingStorage.createId();
+        : (pendingDocumentUpload ? pendingDocumentUpload.id : window.BuildingStorage.createId());
+      if (!pendingDocumentUpload) pendingDocumentUpload = { id: documentId };
 
       let storage = existing && existing.storage
         ? { ...existing.storage }
@@ -6641,10 +6654,13 @@
           throw new Error("Supabase document storage is unavailable.");
         }
 
-        storage = await window.ComplianceHQSupabase.uploadDocumentFile(
-          selectedFile,
-          documentId
-        );
+        if (pendingDocumentUpload.file === selectedFile && pendingDocumentUpload.storage) {
+          storage = { ...pendingDocumentUpload.storage };
+        } else {
+          storage = await window.ComplianceHQSupabase.uploadDocumentFile(selectedFile, documentId);
+          pendingDocumentUpload.file = selectedFile;
+          pendingDocumentUpload.storage = { ...storage };
+        }
 
         storage.previewStatus = "not-generated";
         storage.ocrStatus = "not-indexed";
@@ -6687,6 +6703,7 @@
           throw new Error("Unable to update document.");
         }
 
+        await confirmDocumentSave(payload, building.id);
         closeDocumentForm();
         return;
       }
@@ -6723,12 +6740,14 @@
         throw new Error("Unable to save document.");
       }
 
+      await confirmDocumentSave(payload, building.id);
       closeDocumentForm();
     } catch (error) {
       console.error("Unable to save document:", error);
       documentSaveBtn.disabled = false;
       documentSaveBtn.textContent = originalSaveText;
-      window.alert(error && error.message ? error.message : "Unable to save document. Please try again.");
+      window.alert("Document save was not confirmed. Your form is still open; please retry Save before refreshing.\n\n" +
+        (error && error.message ? error.message : "Unable to save document. Please try again."));
     }
   }
 

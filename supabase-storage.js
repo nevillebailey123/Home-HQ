@@ -174,6 +174,9 @@ async function readSupabaseTable(table) {
   return Array.isArray(result.data) ? result.data : [];
 }
 
+// Only documents observed by this tab may be removed by this tab.
+let knownDocumentIds = new Set();
+
 async function loadApplicationData() {
   const session = await window.ComplianceHQSupabase.getSession();
 
@@ -328,6 +331,7 @@ async function loadApplicationData() {
   });
 
   const documentById = new Map();
+  knownDocumentIds = new Set(documentRows.map(function (row) { return String(row.id); }));
   documentRows.forEach(function (row) {
     documentById.set(row.id, {
       ...mergeStoredData(row),
@@ -635,6 +639,50 @@ async function replaceRelationshipTable(table, rows) {
   }
 
   return rows.length;
+}
+
+async function syncDocumentLinks(rows, documents) {
+  const currentIds = new Set(documents.map(function (row) { return String(row.id); }));
+  const ownedIds = new Set([...knownDocumentIds, ...currentIds]);
+  const existing = await readSupabaseTable("document_links");
+  const key = function (row) {
+    return JSON.stringify([String(row.document_id), row.property_id || null,
+      row.tenancy_id || null, row.schedule_item_id || null, row.relationship_type || ""]);
+  };
+  const wanted = new Map(rows.map(function (row) { return [key(row), row]; }));
+  const existingKeys = new Set(existing.map(key));
+  const missing = Array.from(wanted).filter(function (entry) {
+    return !existingKeys.has(entry[0]);
+  }).map(function (entry) { return entry[1]; });
+  // Insert first: a failed write must not erase a document's existing link.
+  if (missing.length) {
+    const result = await window.ComplianceHQSupabase.client.from("document_links").insert(missing);
+    if (result.error) throw new Error("document_links save: " + result.error.message);
+  }
+  const obsolete = existing.filter(function (row) {
+    return ownedIds.has(String(row.document_id)) && !wanted.has(key(row));
+  }).map(function (row) { return row.id; });
+  if (obsolete.length) {
+    const result = await window.ComplianceHQSupabase.client.from("document_links").delete().in("id", obsolete);
+    if (result.error) throw new Error("document_links update: " + result.error.message);
+  }
+}
+
+async function verifyDocumentSaved(documentId, propertyId, storagePath) {
+  const client = window.ComplianceHQSupabase.client;
+  const documentResult = await client.from("documents").select("id,storage_path")
+    .eq("id", documentId).single();
+  if (documentResult.error) throw new Error("Document save could not be confirmed: " + documentResult.error.message);
+  if (!documentResult.data || documentResult.data.storage_path !== storagePath) {
+    throw new Error("The document file was uploaded, but its saved record could not be confirmed. Please retry Save.");
+  }
+  const linkResult = await client.from("document_links").select("id")
+    .eq("document_id", documentId).eq("property_id", propertyId).limit(1);
+  if (linkResult.error) throw new Error("Document asset link could not be confirmed: " + linkResult.error.message);
+  if (!linkResult.data || !linkResult.data.length) {
+    throw new Error("The document has not been linked to its asset. Please retry Save.");
+  }
+  return true;
 }
 
 async function syncCurrentApplicationData() {
@@ -1016,7 +1064,7 @@ async function syncCurrentApplicationData() {
   await upsertMigrationRows("history_records", historyRecords);
   await upsertMigrationRows("documents", documents);
 
-  await replaceRelationshipTable("document_links", documentLinks);
+  await syncDocumentLinks(documentLinks, documents);
   await replaceRelationshipTable("contact_links", contactLinks);
 
   const deleted = {};
@@ -1025,7 +1073,16 @@ async function syncCurrentApplicationData() {
   deleted.scheduleItems = await deleteRowsNotInSnapshot("schedule_items", scheduleItems);
   deleted.propertyTemplates = await deleteRowsNotInSnapshot("property_templates", propertyTemplates);
   deleted.tenancies = await deleteRowsNotInSnapshot("tenancies", tenancies);
-  deleted.documents = await deleteRowsNotInSnapshot("documents", documents);
+  const currentDocumentIds = new Set(documents.map(function (row) { return String(row.id); }));
+  const removedDocumentIds = Array.from(knownDocumentIds).filter(function (id) {
+    return !currentDocumentIds.has(id);
+  });
+  if (removedDocumentIds.length) {
+    const result = await window.ComplianceHQSupabase.client.from("documents").delete().in("id", removedDocumentIds);
+    if (result.error) throw new Error("documents deletion: " + result.error.message);
+  }
+  deleted.documents = removedDocumentIds.length;
+  knownDocumentIds = currentDocumentIds;
   deleted.contacts = await deleteRowsNotInSnapshot("contacts", contacts);
   deleted.masterTemplates = await deleteRowsNotInSnapshot("master_templates", masterTemplates);
   deleted.properties = await deleteRowsNotInSnapshot("properties", properties);
@@ -1446,5 +1503,6 @@ async function migrateExistingBrowserData() {
 }
 
 window.ComplianceHQSupabase.loadApplicationData = loadApplicationData;
+window.ComplianceHQSupabase.verifyDocumentSaved = verifyDocumentSaved;
 window.ComplianceHQSupabase.syncCurrentApplicationData = syncCurrentApplicationData;
 window.ComplianceHQSupabase.migrateExistingBrowserData = migrateExistingBrowserData;
