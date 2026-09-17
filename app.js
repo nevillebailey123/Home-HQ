@@ -12780,6 +12780,41 @@
     `;
   }
 
+  function getRelatedDocumentsForScheduleItem(building, scheduleItem) {
+    const scheduleId = String(scheduleItem.id || "").trim();
+    if (!scheduleId) return [];
+    const documents = (building.documents || []).concat(
+      getAllTenanciesForBuilding(building).flatMap(function (tenancy) {
+        return tenancy.lease && Array.isArray(tenancy.lease.documents) ? tenancy.lease.documents : [];
+      })
+    );
+    const sourceDocument = getSourceDocumentForScheduleItem(building, scheduleItem);
+    return documents.filter(function (document) {
+      return document !== sourceDocument && String(document.scheduleItemId || "").trim() === scheduleId;
+    });
+  }
+
+  function renderScheduleRelatedDocumentsSection(building, scheduleItem) {
+    const documents = getRelatedDocumentsForScheduleItem(building, scheduleItem);
+    if (!documents.length) return "";
+    return `<section class="schedule-details-section">
+      <h4>Related documents</h4>
+      ${documents.map(function (document, index) {
+        const hasFile = Boolean(document.storage && (document.storage.path || document.storage.dataUrl));
+        const isPdf = /pdf/i.test(document.mimeType || "") || /\.pdf$/i.test(document.fileName || "");
+        return `<button class="document-file-card schedule-source-document-card" type="button"
+          data-schedule-related-document-index="${index}" ${hasFile ? "" : "disabled"}>
+          <span class="document-file-thumbnail" aria-hidden="true">${isPdf ? "PDF" : "FILE"}</span>
+          <span class="document-file-details">
+            <strong>${escapeHtml(getDocumentRegisterTitle(document))}</strong>
+            <span class="lease-helper-text">${escapeHtml(document.fileName || "")}</span>
+            <span>${hasFile ? (isPdf ? "Open PDF" : "Open file") : "File not attached"}</span>
+          </span>
+        </button>`;
+      }).join("")}
+    </section>`;
+  }
+
   function renderScheduleDetailsDialogHtml(building, scheduleItem, detailsData, mode) {
     const viewMode = mode === "edit" ? "edit" : "details";
     const isTenancyItem = Boolean(detailsData.isTenancyItem);
@@ -12834,6 +12869,7 @@
             </dl>
           </section>
           ${tenancyContactSection}
+          ${renderScheduleRelatedDocumentsSection(building, scheduleItem)}
           <section class="schedule-details-section">
             <h4>Completion History</h4>
             ${renderScheduleHistoryTable(detailsData.records, building)}
@@ -12939,6 +12975,7 @@
         ${scheduleItem.sourceType === "document"
           ? renderScheduleSourceDocumentSection(building, scheduleItem)
           : renderPrimaryContactSection(building, scheduleItem, template)}
+        ${renderScheduleRelatedDocumentsSection(building, scheduleItem)}
 
         ${notesValue
           ? `<section class="schedule-details-section"><h4>Notes</h4><p class="schedule-details-notes">${escapeHtml(notesValue)}</p></section>`
@@ -13444,6 +13481,17 @@
 
       const target = event.target;
       if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const relatedDocumentButton = target.closest("[data-schedule-related-document-index]");
+      if (relatedDocumentButton instanceof HTMLElement && viewMode === "details") {
+        if (relatedDocumentButton.disabled) return;
+        const index = Number(relatedDocumentButton.getAttribute("data-schedule-related-document-index"));
+        const documentEntry = getRelatedDocumentsForScheduleItem(building, scheduleItem)[index];
+        if (documentEntry) {
+          await openOrDownloadLeaseDocument(documentEntry, false);
+        }
         return;
       }
 
