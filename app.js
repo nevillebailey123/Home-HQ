@@ -1565,6 +1565,15 @@
   // The shared shell owns the only Property selector, so every module stays in sync.
   function renderAllBuildingFilterSelects() {
     renderBuildingFilterOptions(appPropertySelector);
+    const calendarAssetFilter = document.getElementById("schedule-asset-filter");
+    const inCalendar = scheduleView.classList.contains("is-active");
+    if (inCalendar && calendarAssetFilter) {
+      if (appPropertySelector.parentElement !== calendarAssetFilter) {
+        calendarAssetFilter.appendChild(appPropertySelector);
+      }
+    } else if (appPropertySelector.parentElement !== appSettingsBtn.parentElement) {
+      appSettingsBtn.parentElement.insertBefore(appPropertySelector, appSettingsBtn);
+    }
   }
 
   function applyBuildingFilterSelection(buildingId) {

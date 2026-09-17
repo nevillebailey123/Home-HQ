@@ -4750,3 +4750,16 @@ label:has(> #schedule-filter-category),
 .legacy-category-control {
   display: none !important;
 }
+
+/* Calendar filters share one row, with matching widths and mobile stacking. */
+#schedule-view .schedule-filter-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: none;
+}
+#schedule-view .schedule-filter-row label { min-width: 0; }
+#schedule-view .schedule-filter-select { width: 100%; max-width: none; }
+body.calendar-active .app-shell-property { flex: 0 0 auto; }
+@media (max-width: 600px) {
+  #schedule-view .schedule-filter-row { grid-template-columns: minmax(0, 1fr); }
+}
