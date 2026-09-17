@@ -126,7 +126,7 @@
             <p class="tagline">Things you want Home HQ to keep track of.</p>
           </div>
           <div class="top-right-actions">
-            <button id="settings-add-property-btn" class="btn btn-primary" type="button">+ Add Asset</button>
+            
           </div>
         </header>
 
@@ -134,7 +134,8 @@
           <div class="tab-row" role="tablist" aria-label="Asset status">
             <button id="properties-tab-active" class="tab-btn is-active" type="button">Active</button>
             <button id="properties-tab-archived" class="tab-btn" type="button">Archived</button>
-          </div>
+          <button id="settings-add-property-btn" class="btn btn-primary" type="button">+ Add Asset</button>
+</div>
           <section id="settings-property-list" class="building-list properties-list" aria-live="polite"></section>
         </section>
       </section>
@@ -336,7 +337,7 @@
             <p id="tenancy-building-name" class="overview-building-name visually-hidden"></p>
           </div>
           <div class="top-right-actions">
-            <button id="add-tenancy-btn" class="btn btn-primary" type="button">+ Add Tenancy</button>
+            
           </div>
         </header>
 
@@ -344,7 +345,8 @@
           <div class="tab-row" role="tablist" aria-label="Tenancy tabs">
             <button id="tenancy-tab-current" class="tab-btn is-active" type="button" role="tab" aria-selected="true">Current</button>
             <button id="tenancy-tab-history" class="tab-btn" type="button" role="tab" aria-selected="false">History</button>
-          </div>
+          <button id="add-tenancy-btn" class="btn btn-primary" type="button">+ Add Tenancy</button>
+</div>
         </section>
 
         <section id="tenancy-current-panel" class="tab-panel is-active">
@@ -446,7 +448,7 @@
             <p class="tagline">Central document register.</p>
           </div>
           <div class="top-right-actions">
-            <button id="documents-add-btn" class="btn btn-primary" type="button">+ Add Document</button>
+            
           </div>
         </header>
 
@@ -460,6 +462,7 @@
               </select>
             </label>
             <label class="documents-search-control"><span class="schedule-filter-label">Search</span><input id="lease-search" class="search-input lease-search-input documents-toolbar-search" type="search" placeholder="Search documents" aria-label="Search documents" /></label>
+            <button id="documents-add-btn" class="btn btn-primary page-add-action" type="button">+ Add Document</button>
           </div>
 
           <section id="lease-dashboard-panel" style="margin-top: 32px;">
@@ -539,7 +542,7 @@
             <p id="contacts-building-name" class="overview-building-name visually-hidden"></p>
           </div>
           <div class="top-right-actions">
-            <button id="contacts-create-btn" class="btn btn-primary" type="button">+ Add Contact</button>
+            
           </div>
         </header>
 
@@ -553,6 +556,7 @@
                 placeholder="Search by name, company, phone or email"
               />
             </label>
+            <button id="contacts-create-btn" class="btn btn-primary page-add-action" type="button">+ Add Contact</button>
           </div></section>
         <section id="contacts-empty-state" class="module-content-card section-card">
           <p id="contacts-empty-message" class="module-placeholder">No contacts have been added.</p>
@@ -709,7 +713,7 @@
             <p id="schedule-building-name" class="overview-building-name visually-hidden"></p>
           </div>
           <div class="top-right-actions schedule-header-actions">
-            <button id="manage-templates-btn" class="btn btn-primary" type="button">+ Add Calendar Item</button>
+            
           </div>
         </header>
 
@@ -737,6 +741,7 @@
               <span class="schedule-filter-label">Search</span>
               <input id="schedule-search" class="schedule-filter-select" type="search" placeholder="Search calendar items" />
             </label>
+            <button id="manage-templates-btn" class="btn btn-primary page-add-action" type="button">+ Add Calendar Item</button>
           </div>
 
           <section id="schedule-ops-list" class="schedule-ops-list" aria-live="polite"></section>
@@ -845,7 +850,7 @@
     <script src="supabase-storage.js?v=10"></script>
     <script src="indexeddb-storage.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js?v=33"></script>
+    <script src="app.js?v=34"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async function () {

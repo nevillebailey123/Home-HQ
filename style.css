@@ -4795,3 +4795,23 @@ body.settings-active .page-asset-filter-row { display: none; }
 }
 
 #schedule-search { box-sizing: border-box; min-width: 0; margin: 0; border-color: var(--accent); }
+
+/* Page actions sit beside their filters; Settings sits beside the page title. */
+#schedule-view .schedule-filter-row,
+#lease-view .documents-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
+#contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
+.page-add-action { align-self: end; min-height: 48px; white-space: nowrap; margin: 0; }
+#settings-add-property-btn, #add-tenancy-btn { margin-left: auto; }
+.app-shell-property:has(> #app-property-selector:only-child) { display: none; }
+.view-header { position: relative; }
+@media (max-width: 760px) {
+  #schedule-view .schedule-filter-row,
+  #lease-view .documents-toolbar,
+  #contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  #schedule-view .schedule-filter-row,
+  #lease-view .documents-toolbar,
+  #contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: minmax(0, 1fr); }
+  .page-add-action { width: 100%; }
+}

@@ -1578,8 +1578,21 @@
     }
     if (filterHost && activeAppModule !== "settings") {
       if (appPropertySelector.parentElement !== filterHost) filterHost.appendChild(appPropertySelector);
-    } else if (appPropertySelector.parentElement !== appSettingsBtn.parentElement) {
-      appSettingsBtn.parentElement.insertBefore(appPropertySelector, appSettingsBtn);
+    } else {
+      const shellProperty = appShellHeader.querySelector(".app-shell-property");
+      if (appPropertySelector.parentElement !== shellProperty) shellProperty.appendChild(appPropertySelector);
+    }
+    if (activeView) {
+      const header = activeView.querySelector(".view-header");
+      if (header) {
+        let actions = header.querySelector(".top-right-actions");
+        if (!actions) {
+          actions = document.createElement("div");
+          actions.className = "top-right-actions";
+          header.appendChild(actions);
+        }
+        if (appSettingsBtn.parentElement !== actions) actions.appendChild(appSettingsBtn);
+      }
     }
 
   }
