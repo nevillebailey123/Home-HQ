@@ -457,13 +457,14 @@
 
         <section id="lease-repository-card" class="module-content-card lease-documents-card section-card">
           <div class="documents-toolbar" aria-label="Document filters">
+<label data-asset-filter-host><span class="schedule-filter-label">Asset</span></label>
             <label class="documents-category-control">
               <span class="schedule-filter-label">Category</span>
               <select id="lease-category-filter" class="schedule-filter-select">
                 <option value="">All Documents</option>
               </select>
             </label>
-            <input id="lease-search" class="search-input lease-search-input documents-toolbar-search" type="search" placeholder="Search documents" aria-label="Search documents" />
+            <label class="documents-search-control"><span class="schedule-filter-label">Search</span><input id="lease-search" class="search-input lease-search-input documents-toolbar-search" type="search" placeholder="Search documents" aria-label="Search documents" /></label>
           </div>
 
           <section id="lease-dashboard-panel" style="margin-top: 32px;">
@@ -547,13 +548,9 @@
           </div>
         </header>
 
-        <section id="contacts-empty-state" class="module-content-card section-card">
-          <p id="contacts-empty-message" class="module-placeholder">No contacts have been added.</p>
-        </section>
-
-        <section id="contacts-list-card" class="module-content-card section-card">
-          <div class="building-filter-row documents-filter-row" aria-label="Contact filters">
-            <label>
+        <section class="module-content-card section-card contacts-page-filters">          <div class="building-filter-row documents-filter-row" aria-label="Contact filters">
+<label data-asset-filter-host><span class="schedule-filter-label">Asset</span></label>
+            <label><span class="schedule-filter-label">Search</span>
               <input
                 id="contacts-search"
                 class="search-input"
@@ -561,7 +558,13 @@
                 placeholder="Search by name, company, phone or email"
               />
             </label>
-          </div>
+          </div></section>
+        <section id="contacts-empty-state" class="module-content-card section-card">
+          <p id="contacts-empty-message" class="module-placeholder">No contacts have been added.</p>
+        </section>
+
+        <section id="contacts-list-card" class="module-content-card section-card">
+
           <section id="contacts-list" class="building-list" aria-live="polite"></section>
         </section>
 
@@ -852,7 +855,7 @@
     <script src="supabase-storage.js?v=10"></script>
     <script src="indexeddb-storage.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js?v=29"></script>
+    <script src="app.js?v=30"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async function () {

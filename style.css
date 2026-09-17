@@ -4763,3 +4763,33 @@ body.calendar-active .app-shell-property { flex: 0 0 auto; }
 @media (max-width: 600px) {
   #schedule-view .schedule-filter-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Shared page-level asset filtering. */
+.app-shell-property { flex: 0 0 auto; }
+[data-asset-filter-host], .page-asset-filter-row label,
+#lease-view .documents-toolbar label {
+  display: grid; gap: 0.28rem; min-width: 0;
+}
+[data-asset-filter-host] select, .page-asset-filter-row select {
+  width: 100%; max-width: none;
+}
+.page-asset-filter-row { max-width: 420px; margin: 0 0 1rem; }
+body.settings-active .page-asset-filter-row { display: none; }
+#contacts-view .contacts-page-filters .documents-filter-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); max-width: none;
+}
+#contacts-view .contacts-page-filters input,
+#contacts-view .contacts-page-filters select { width: 100%; min-width: 0; height: 48px; margin: 0; }
+#lease-view .documents-toolbar {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-stack-contacts); align-items: end;
+}
+#lease-view .documents-toolbar input,
+#lease-view .documents-toolbar select {
+  width: 100% !important; max-width: none; min-width: 0; height: 48px; min-height: 48px; margin: 0;
+}
+#lease-view .documents-toolbar label { align-self: end; }
+@media (max-width: 600px) {
+  #lease-view .documents-toolbar,
+  #contacts-view .contacts-page-filters .documents-filter-row { grid-template-columns: minmax(0, 1fr); }
+  .page-asset-filter-row { max-width: none; }
+}

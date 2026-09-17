@@ -1565,15 +1565,23 @@
   // The shared shell owns the only Property selector, so every module stays in sync.
   function renderAllBuildingFilterSelects() {
     renderBuildingFilterOptions(appPropertySelector);
-    const calendarAssetFilter = document.getElementById("schedule-asset-filter");
-    const inCalendar = scheduleView.classList.contains("is-active");
-    if (inCalendar && calendarAssetFilter) {
-      if (appPropertySelector.parentElement !== calendarAssetFilter) {
-        calendarAssetFilter.appendChild(appPropertySelector);
-      }
+    const activeView = document.querySelector(".view.is-active");
+    let filterHost = activeView && activeView.querySelector("[data-asset-filter-host], #schedule-asset-filter");
+    if (activeView && activeAppModule !== "settings" && !filterHost) {
+      const row = document.createElement("div");
+      row.className = "page-asset-filter-row";
+      row.innerHTML = '<label data-asset-filter-host><span class="schedule-filter-label">Asset</span></label>';
+      const header = activeView.querySelector(".view-header");
+      if (header) header.insertAdjacentElement("afterend", row);
+      else activeView.prepend(row);
+      filterHost = row.querySelector("[data-asset-filter-host]");
+    }
+    if (filterHost && activeAppModule !== "settings") {
+      if (appPropertySelector.parentElement !== filterHost) filterHost.appendChild(appPropertySelector);
     } else if (appPropertySelector.parentElement !== appSettingsBtn.parentElement) {
       appSettingsBtn.parentElement.insertBefore(appPropertySelector, appSettingsBtn);
     }
+
   }
 
   function applyBuildingFilterSelection(buildingId) {
