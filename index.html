@@ -11,7 +11,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
   </head>
   <body>
     <section id="auth-screen" class="auth-screen" hidden>
@@ -236,7 +236,7 @@
             </select>
 
             <label for="templateCategory">Category</label>
-            <select id="templateCategory" name="category" required></select>
+            <select id="templateCategory" name="category"></select>
 
             <label for="templateFrequency">Default Frequency</label>
             <select id="templateFrequency" name="defaultFrequency" required></select>
@@ -481,7 +481,7 @@
             <select id="document-building-select" name="buildingId" required></select>
 
             <label for="document-category-select">Category</label>
-            <select id="document-category-select" name="category" required></select>
+            <select id="document-category-select" name="category"></select>
 
             <label for="document-date-input">Document Date</label>
             <input id="document-date-input" name="documentDate" type="date" />
@@ -849,7 +849,7 @@
     <script src="supabase-storage.js?v=9"></script>
     <script src="indexeddb-storage.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js?v=23"></script>
+    <script src="app.js?v=24"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async function () {

@@ -4735,3 +4735,18 @@ body.calendar-active .app-shell {
   overflow: hidden;
 }
 
+
+/* Assets organize Home HQ. Legacy controls retain stored metadata only. */
+#settings-document-categories-btn,
+#settings-document-categories-view,
+label[for="templateCategory"],
+#templateCategory,
+label[for="document-category-select"],
+#document-category-select,
+label[for="document-tenancy-select"],
+#document-tenancy-select,
+.documents-category-control,
+label:has(> #schedule-filter-category),
+.legacy-category-control {
+  display: none !important;
+}

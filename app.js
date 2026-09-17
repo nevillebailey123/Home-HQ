@@ -2850,7 +2850,7 @@
         return `
           <label class="setup-checkbox-row">
             <input type="checkbox" value="${template.id}"${checked} />
-            <span>${template.name} (${template.assetType || "All Assets"}, ${template.category}, ${template.defaultFrequency})</span>
+            <span>${template.name} (${template.assetType || "All Assets"}, ${template.defaultFrequency})</span>
           </label>
         `;
       })
@@ -5035,9 +5035,6 @@
       if (scheduleFilters.property && row.propertyId !== scheduleFilters.property) {
         return false;
       }
-      if (scheduleFilters.category !== "all" && row.category !== scheduleFilters.category) {
-        return false;
-      }
       if (scheduleFilters.status !== "all" && row.visualPriority !== scheduleFilters.status) {
         return false;
       }
@@ -6272,10 +6269,6 @@
   }
 
   function matchesDocumentRegisterFilters(entry) {
-    if (leaseCategoryFilterValue && getDocumentRegisterCategory(entry) !== leaseCategoryFilterValue) {
-      return false;
-    }
-
     // Guarded reference: older embedded test harnesses execute this function without declaring the newer filter globals.
     const relatedToFilter = typeof leaseRelatedToFilterValue !== "undefined" ? leaseRelatedToFilterValue : "";
     if (relatedToFilter && getDocumentRegisterRelatedToLabel(entry) !== relatedToFilter) {
@@ -6289,7 +6282,6 @@
 
     return normalizeText([
       getDocumentRegisterTitle(entry.record),
-      getDocumentRegisterCategory(entry),
       entry.building.buildingName,
       entry.record.notes,
       entry.record.description,
@@ -6330,9 +6322,6 @@
     if (leaseSearchQuery.trim()) {
       return "No documents match your search.";
     }
-    if (leaseCategoryFilterValue) {
-      return `No ${leaseCategoryFilterValue} documents${getBuildingFilterId() ? " for this Asset" : ""}.`;
-    }
     return getBuildingFilterId() ? "No documents for this Asset." : "No documents have been added yet.";
   }
 
@@ -6352,51 +6341,6 @@
 
     const entries = getFilteredDocumentRegisterEntries();
 
-    // The default Documents view is a category overview rather than one long
-    // undifferentiated document list. Search results and selected categories
-    // continue to use the normal document register.
-    if (!leaseCategoryFilterValue && !leaseSearchQuery.trim()) {
-      const allEntries = getDocumentRegisterRecords().filter(function (entry) {
-        const buildingFilterId = getBuildingFilterId();
-        return !buildingFilterId || String(entry.building.id) === String(buildingFilterId);
-      });
-
-      const categoryCounts = getDocumentCategories().map(function (category) {
-        return {
-          category: category,
-          count: allEntries.filter(function (entry) {
-            return getDocumentRegisterCategory(entry) === category;
-          }).length,
-        };
-      }).filter(function (item) {
-        return item.count > 0;
-      });
-
-      leaseCategoryGrid.classList.remove("document-register-list");
-      leaseCategoryGrid.classList.add("document-category-overview");
-
-      if (categoryCounts.length === 0) {
-        leaseCategoryGrid.innerHTML = `<p class="module-placeholder">${escapeHtml(getDocumentRegisterEmptyMessage())}</p>`;
-        return;
-      }
-
-      leaseCategoryGrid.innerHTML = categoryCounts.map(function (item) {
-        return `
-          <button
-            class="document-category-card"
-            type="button"
-            data-document-category-open="${escapeHtml(item.category)}"
-            aria-label="Open ${escapeHtml(item.category)} documents"
-          >
-            <span class="document-category-card-name">${escapeHtml(item.category)}</span>
-            <span class="document-category-card-count">${item.count} ${item.count === 1 ? "document" : "documents"}</span>
-          </button>
-        `;
-      }).join("");
-
-      return;
-    }
-
     leaseCategoryGrid.classList.remove("document-category-overview");
 
     if (entries.length === 0) {
@@ -6408,19 +6352,7 @@
     leaseCategoryGrid.classList.add("document-register-list");
 
     const singlePropertySelected = Boolean(getBuildingFilterId());
-    const categoryHeader = leaseCategoryFilterValue
-      ? `
-        <div class="document-category-header">
-          <button class="btn btn-secondary document-category-back" type="button" data-document-category-back="true">← All Documents</button>
-          <div>
-            <h3>${escapeHtml(leaseCategoryFilterValue)}</h3>
-            <p class="document-item-meta">${entries.length} ${entries.length === 1 ? "document" : "documents"}</p>
-          </div>
-        </div>
-      `
-      : "";
-
-    leaseCategoryGrid.innerHTML = categoryHeader + entries.map(function (entry) {
+    leaseCategoryGrid.innerHTML = entries.map(function (entry) {
       const record = entry.record;
       const tenancy = getDocumentRegisterRelatedTenancy(entry);
       const scheduleItem = getDocumentRegisterRelatedScheduleItem(entry);
@@ -6687,7 +6619,9 @@
     documentSaveBtn.textContent = "Saving...";
 
     try {
-      const tenancyId = String(documentTenancySelect.value || "").trim();
+      const tenancyId = activeDocumentFormMode === "edit"
+        ? String(documentTenancySelect.value || "").trim()
+        : "";
       const scheduleItemId = String(documentScheduleSelect.value || "").trim();
       const existing = activeDocumentContext ? activeDocumentContext.record : null;
       const now = new Date().toISOString();
@@ -6721,8 +6655,8 @@
         id: documentId,
         title: title,
         description: title,
-        category: getDocumentFormCategory(),
-        documentType: existing && existing.documentType ? existing.documentType : getDocumentFormCategory(),
+        category: existing ? String(existing.category || "") : "General",
+        documentType: existing && existing.documentType ? existing.documentType : "Document",
         documentDate: String(documentDateInput.value || "").trim(),
         expiryDate: String(documentExpiryInput.value || "").trim(),
         addExpiryToCalendar: Boolean(String(documentExpiryInput.value || "").trim() && documentExpiryCalendarToggle.checked),
@@ -7741,7 +7675,6 @@
             <p class="template-card-field"><span class="template-card-label">Asset Type</span><span class="template-card-value">${template.assetType || "All Assets"}</span></p>
             <p class="template-card-field"><span class="template-card-label">Frequency</span><span class="template-card-value">${template.defaultFrequency}</span></p>
             <p class="template-card-field"><span class="template-card-label">Status</span><span class="template-card-value">${template.active === "Yes" ? "Active" : "Inactive"}</span></p>
-            <p class="template-card-field"><span class="template-card-label">Category</span><span class="template-card-value">${template.category}</span></p>
             <p class="template-card-field"><span class="template-card-label">Due Date</span><span class="template-card-value">${formatDate(template.nextDueDate)}</span></p>
           </section>
           <section class="template-card-column template-card-column-right">
@@ -7999,7 +7932,7 @@
       name: String(formData.get("name") || "").trim(),
       description: String(formData.get("description") || "").trim(),
       assetType: String(formData.get("assetType") || "All Assets").trim() || "All Assets",
-      category: String(formData.get("category") || getDocumentCategories()[0] || "").trim(),
+      category: existingTemplate ? String(existingTemplate.category || "") : "General",
       defaultFrequency: String(formData.get("defaultFrequency") || "Annual").trim(),
       nextDueDate: String(formData.get("nextDueDate") || "").trim(),
       defaultReminderPeriod: String(formData.get("defaultReminderPeriod") || "30 days before").trim(),
@@ -10471,7 +10404,7 @@
             <span>Asset Type</span>
             <input name="assetType" type="text" value="All Assets" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
           </label>
-          <label>
+          <label class="legacy-category-control">
             <span>Category</span>
             <select name="category">${getDocumentCategories().map(function (option) {
               return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
@@ -10589,7 +10522,7 @@
             <span>Asset Type</span>
             <input name="assetType" type="text" value="${escapeHtml(template.assetType || "All Assets")}" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
           </label>
-          <label>
+          <label class="legacy-category-control">
             <span>Category</span>
             <select name="category">${getDocumentCategories().map(function (option) {
               return `<option value="${escapeHtml(option)}"${option === template.category ? " selected" : ""}>${escapeHtml(option)}</option>`;
@@ -10677,7 +10610,7 @@
             ...template,
             name: String(formData.get("name") || "").trim(),
             assetType: String(formData.get("assetType") || template.assetType || "All Assets").trim() || "All Assets",
-            category: String(formData.get("category") || template.category || "General").trim(),
+            category: String(template.category || ""),
             defaultFrequency: String(formData.get("defaultFrequency") || template.defaultFrequency || "Annual").trim(),
             defaultReminderPeriod: String(formData.get("defaultReminderPeriod") || "").trim(),
             suggestedDocuments: String(formData.get("suggestedDocuments") || "").trim(),
@@ -10789,7 +10722,7 @@
         </div>
         <label class="template-picker-search-wrap">
           <span class="visually-hidden">Search templates</span>
-          <input id="template-picker-search" class="search-input template-picker-search" type="search" placeholder="Search by template name, asset type, category, or description" />
+          <input id="template-picker-search" class="search-input template-picker-search" type="search" placeholder="Search by template name, asset type, or description" />
         </label>
         <div class="template-picker-bulk-actions">
           <button class="btn btn-secondary btn-small" type="button" data-template-picker-action="select-all">Select All</button>
@@ -10857,7 +10790,6 @@
         return templates.filter(function (template) {
           return normalizeText(template.name).includes(query)
             || normalizeText(template.assetType).includes(query)
-            || normalizeText(template.category).includes(query)
             || normalizeText(template.description).includes(query);
         });
       }
@@ -10889,7 +10821,6 @@
               <span class="template-picker-item-content">
                 <strong>${escapeHtml(template.name)}</strong>
                 <span>${escapeHtml(template.assetType || "All Assets")}</span>
-                <span>${escapeHtml(template.category)}</span>
                 <span>${escapeHtml(template.defaultFrequency)}</span>
                 ${archivedLabel}
               </span>
@@ -11563,7 +11494,7 @@
             </select>
           </label>
 
-          <label>
+          <label class="legacy-category-control">
             <span>Category</span>
             <select name="category">
               <option value="" selected>No Category</option>
@@ -12399,7 +12330,7 @@
     const formData = new FormData(form);
     const title = String(formData.get("title") || "").trim();
     const frequency = String(formData.get("frequency") || "Annual").trim();
-    const category = String(formData.get("category") || "General").trim();
+    const category = String(scheduleItem.category || "").trim();
     const submittedInitialDueDate = String(formData.get("initialDueDate") || "").trim();
     const propertyId = String(formData.get("propertyId") || "").trim();
     const latestBuilding = findBuildingById(building && building.id ? building.id : activeBuildingId) || building;
@@ -12817,7 +12748,6 @@
               <div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue) || "Asset not assigned")}</dd></div>
               <div><dt>Tenancy</dt><dd>${escapeHtml(tenancyCompanyName)}</dd></div>
               <div><dt>Event Type</dt><dd>${escapeHtml(eventTypeLabel)}</dd></div>
-              <div><dt>Category</dt><dd>${escapeHtml(categoryValue)}</dd></div>
               ${isRecurring ? `<div><dt>Frequency</dt><dd>${escapeHtml(frequencyValue)}</dd></div>` : ""}
               <div><dt>Status</dt><dd>${escapeHtml(statusText)}</dd></div>
               <div><dt>Next Due Date</dt><dd>${formatDate(scheduleItem.dueDate)}</dd></div>
@@ -12875,7 +12805,7 @@
                   }).join("")}
                 </select>
               </label>
-              <label>Category
+              <label class="legacy-category-control">Category
                 <select name="category">
                   ${getDocumentCategories().map(function (option) {
                     const selected = option === categoryValue ? " selected" : "";
@@ -12921,7 +12851,6 @@
             ${getBuildingNameById(propertyValue) ? `<div><dt>Asset</dt><dd>${escapeHtml(getBuildingNameById(propertyValue))}</dd></div>` : ""}
             <div><dt>Frequency</dt><dd>${escapeHtml(frequencyDisplay)}</dd></div>
             ${scheduledDatesMarkup}
-            <div><dt>Category</dt><dd>${escapeHtml(categoryValue)}</dd></div>
             <div><dt>Status</dt><dd>${escapeHtml(statusText)}</dd></div>
             <div><dt>Next Due Date</dt><dd>${formatDate(scheduleItem.dueDate)}</dd></div>
             <div><dt>Last Completed</dt><dd>${formatLastCompletedDate(scheduleItem.lastCompletedDate || "")}</dd></div>
@@ -12969,14 +12898,6 @@
             <label>Completed Date<input name="completedDate" type="date" value="${now}" required /></label>
             <label>Completed By<input name="completedBy" type="text" value="Home HQ" required /></label>
             <label>Notes<textarea name="notes" rows="3"></textarea></label>
-            <label>Document Category
-              <select name="documentCategory" class="schedule-filter-select">
-                <option value="" selected>Select Category</option>
-                ${getDocumentCategories().map(function (category) {
-                  return `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`;
-                }).join("")}
-              </select>
-            </label>
             <div class="schedule-complete-upload-row">
               <button type="button" class="btn btn-secondary btn-small" data-schedule-complete-upload>Upload Document</button>
               <span data-schedule-complete-file-name>No file selected</span>
@@ -13031,17 +12952,7 @@
         form.addEventListener("submit", async function (event) {
           event.preventDefault();
           const formData = new FormData(form);
-          const selectedCategory = String(formData.get("documentCategory") || "").trim();
-
-          if (selectedFile && !selectedCategory) {
-            const categorySelect = form.elements.namedItem("documentCategory");
-            if (categorySelect instanceof HTMLSelectElement) {
-              categorySelect.setCustomValidity("Please select a document category.");
-              categorySelect.reportValidity();
-              categorySelect.setCustomValidity("");
-            }
-            return;
-          }
+          const selectedCategory = "General";
 
           let completionDocument = null;
 
