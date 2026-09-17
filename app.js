@@ -585,7 +585,7 @@
   }
 
   function goToDashboard() {
-    openPropertiesView();
+    openScheduleView();
   }
 
   function setBreadcrumbs(items) {
@@ -788,7 +788,7 @@
     companiesView.classList.add("is-active");
     setActiveAppModule("Contacts");
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "Contacts", onClick: openContactsView },
       { label: "Companies", onClick: openCompaniesView },
     ]);
@@ -806,7 +806,7 @@
     historyView.classList.add("is-active");
     setActiveAppModule("Schedule");
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "Calendar", onClick: function () { openScheduleView(activeBuildingId); } },
       { label: "Completed", onClick: function () { openHistoryView(activeBuildingId); } },
     ]);
@@ -817,7 +817,7 @@
     setAppShellVisible(false);
     completeTaskView.classList.add("is-active");
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "Calendar", onClick: function () { openScheduleView(activeBuildingId); } },
       { label: "Complete Task", onClick: function () { openCompleteTaskView(activeScheduleItemId); } },
     ]);
@@ -2441,7 +2441,7 @@
     setupNewContactCompanyWrap.style.display = "none";
     setupLinkedContactsList.innerHTML = '<p class="module-placeholder">No contacts linked yet.</p>';
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "New Asset", onClick: showForm },
     ]);
     renderSetupRelationshipOptions(setupExistingContactRelationship, "Other");
@@ -7213,7 +7213,7 @@
     placeholderBuildingName.textContent = getActiveBuildingName();
     placeholderMessage.textContent = message;
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: getActiveBuildingName(), onClick: function () { openOverviewById(activeBuildingId); } },
       { label: moduleName, onClick: function () { showModulePlaceholder(moduleName, message); } },
     ]);
@@ -7955,7 +7955,7 @@
     renderTemplateLibrarySectionState("form");
     showTemplateLibraryView();
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: "Template Library", onClick: openTemplateLibrary },
       { label: mode === "edit" ? "Edit Template" : "Add Template", onClick: function () { openTemplateForm(mode, template); } },
     ]);
@@ -8315,7 +8315,7 @@
     renderContactSectionState("form");
     showContactsView();
     setBreadcrumbs([
-      { label: "Assets", onClick: goToDashboard },
+      { label: "Assets", onClick: openSettingsProperties },
       { label: getActiveBuildingName(), onClick: function () { openOverviewById(activeBuildingId); } },
       { label: "Contacts", onClick: openContactsView },
       { label: mode === "edit" ? "Edit Contact" : "New Contact", onClick: function () { openContactForm(mode, contact); } },
@@ -14447,7 +14447,7 @@
 
     setCurrentPropertyId("");
     renderBuildings();
-    openPropertiesView();
+    openScheduleView("");
   }
 
   function startFromBrowserStorage() {
