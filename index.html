@@ -81,10 +81,6 @@
             <p class="module-placeholder">Manage your assets and add new ones.</p>
           </article>
 
-          <article id="settings-asset-types-btn" class="building-card clickable-card" role="button" tabindex="0">
-            <h3>Asset Types</h3>
-            <p class="module-placeholder">Manage the types used to organise your assets.</p>
-          </article>
 
           <article id="settings-document-categories-btn" class="building-card clickable-card" role="button" tabindex="0">
             <h3>Categories</h3>
@@ -229,8 +225,8 @@
             <label for="templateDescription">Description (Optional)</label>
             <textarea id="templateDescription" name="description" rows="2" placeholder="Short template description"></textarea>
 
-            <label for="templateAssetType">Asset Type</label>
-            <select id="templateAssetType" name="assetType">
+            
+            <select style="display: none;" aria-hidden="true" tabindex="-1" id="templateAssetType" name="assetType">
               <option value="All Assets">All Assets</option>
             </select>
 
@@ -284,8 +280,8 @@
               required
             />
 
-            <label for="buildingType">Asset Type</label>
-            <select id="buildingType" name="buildingType">
+            
+            <select style="display: none;" aria-hidden="true" tabindex="-1" id="buildingType" name="buildingType">
               <option value="">Not specified</option>
             </select>
 
@@ -319,7 +315,7 @@
         <section class="module-content-card dashboard-summary-card" aria-live="polite">
           <h3>Asset Information</h3>
           <dl class="snapshot-list dashboard-snapshot-list">
-            <div><dt>Type</dt><dd id="overview-status"></dd></div>
+            <div hidden><dd id="overview-status"></dd></div>
             <div><dt>Notes</dt><dd id="overview-property-manager"></dd></div>
           </dl>
         </section>
@@ -817,8 +813,8 @@
           <label for="editBuildingName">Asset Name</label>
           <input id="editBuildingName" name="buildingName" type="text" required />
 
-          <label for="editBuildingType">Asset Type</label>
-          <select id="editBuildingType" name="buildingType">
+          
+          <select style="display: none;" aria-hidden="true" tabindex="-1" id="editBuildingType" name="buildingType">
             <option value="">Not specified</option>
           </select>
 
@@ -854,7 +850,7 @@
     <script src="supabase-storage.js?v=10"></script>
     <script src="indexeddb-storage.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js?v=31"></script>
+    <script src="app.js?v=32"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async function () {

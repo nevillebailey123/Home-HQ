@@ -2280,7 +2280,6 @@
 
     settingsPropertyList.innerHTML = buildings.map(function (building) {
       const archived = isBuildingArchived(building);
-      const assetType = String(building.buildingType || "").trim() || "Other";
       const scheduleItems = Array.isArray(building.scheduleItems) ? building.scheduleItems : [];
 
       const overdueCount = scheduleItems.filter(function (item) {
@@ -2305,7 +2304,6 @@
           <div class="property-card-heading">
             <div>
               <h3>${escapeHtml(building.buildingName || "Untitled Asset")}</h3>
-              <p class="property-card-address">${escapeHtml(assetType)}</p>
             </div>
             ${archived ? '<span class="property-status-label">Archived</span>' : ""}
           </div>
@@ -2843,15 +2841,7 @@
   }
 
   function renderTemplateLibrary() {
-    const assetType = normalizeText(setupState.buildingDetails && setupState.buildingDetails.buildingType);
-
-    const templates = getActiveScheduledItemTemplates().filter(function (template) {
-      const templateAssetType = normalizeText(template.assetType || "All Assets");
-
-      return templateAssetType === "all assets"
-        || !templateAssetType
-        || (assetType && templateAssetType === assetType);
-    });
+    const templates = getActiveScheduledItemTemplates();
 
     if (templates.length === 0) {
       setupTemplateList.innerHTML = '<p class="module-placeholder">No active templates available. Add templates in the Template Library.</p>';
@@ -2867,7 +2857,7 @@
         return `
           <label class="setup-checkbox-row">
             <input type="checkbox" value="${template.id}"${checked} />
-            <span>${template.name} (${template.assetType || "All Assets"}, ${template.defaultFrequency})</span>
+            <span>${template.name} (${template.defaultFrequency})</span>
           </label>
         `;
       })
@@ -7709,7 +7699,7 @@
         <div class="template-card-layout">
           <section class="template-card-column template-card-column-left">
             <h3 class="template-card-title">${template.name}</h3>
-            <p class="template-card-field"><span class="template-card-label">Asset Type</span><span class="template-card-value">${template.assetType || "All Assets"}</span></p>
+
             <p class="template-card-field"><span class="template-card-label">Frequency</span><span class="template-card-value">${template.defaultFrequency}</span></p>
             <p class="template-card-field"><span class="template-card-label">Status</span><span class="template-card-value">${template.active === "Yes" ? "Active" : "Inactive"}</span></p>
             <p class="template-card-field"><span class="template-card-label">Due Date</span><span class="template-card-value">${formatDate(template.nextDueDate)}</span></p>
@@ -7968,7 +7958,7 @@
       id: existingTemplate && existingTemplate.id ? existingTemplate.id : window.BuildingStorage.createId(),
       name: String(formData.get("name") || "").trim(),
       description: String(formData.get("description") || "").trim(),
-      assetType: String(formData.get("assetType") || "All Assets").trim() || "All Assets",
+      assetType: existingTemplate ? existingTemplate.assetType : "All Assets",
       category: existingTemplate ? String(existingTemplate.category || "") : "General",
       defaultFrequency: String(formData.get("defaultFrequency") || "Annual").trim(),
       nextDueDate: String(formData.get("nextDueDate") || "").trim(),
@@ -9131,7 +9121,7 @@
 
   function renderOverview(building) {
     document.getElementById("overview-title").textContent = building.buildingName || "Asset";
-    overviewBuildingName.textContent = String(building.buildingType || "").trim() || "Asset";
+    overviewBuildingName.textContent = "";
     overviewStatus.textContent = String(building.buildingType || "").trim() || "Not specified";
     overviewPropertyManager.textContent = String(building.notes || "").trim() || "None";
 
@@ -9177,7 +9167,7 @@
       ...current,
       id: current.id,
       buildingName: String(formData.get("buildingName") || "").trim(),
-      buildingType: String(formData.get("buildingType") || "").trim(),
+      buildingType: current.buildingType || "",
       notes: String(formData.get("notes") || "").trim(),
       createdDate: current.createdDate || new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
@@ -10437,10 +10427,6 @@
             <span>Description (Optional)</span>
             <textarea name="description" rows="2" placeholder="Short template description"></textarea>
           </label>
-          <label>
-            <span>Asset Type</span>
-            <input name="assetType" type="text" value="All Assets" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
-          </label>
           <label class="legacy-category-control">
             <span>Category</span>
             <select name="category">${getDocumentCategories().map(function (option) {
@@ -10554,10 +10540,6 @@
           <label>
             <span>Name</span>
             <input name="name" type="text" value="${escapeHtml(template.name)}" required />
-          </label>
-          <label>
-            <span>Asset Type</span>
-            <input name="assetType" type="text" value="${escapeHtml(template.assetType || "All Assets")}" placeholder="e.g. All Assets, Home, Vehicle, Aircraft" />
           </label>
           <label class="legacy-category-control">
             <span>Category</span>
@@ -10799,24 +10781,9 @@
       }
 
       function getFilteredTemplates() {
-        // Already-assigned templates remain visible so they can always be unassigned.
-        // New assignments are limited to active templates that apply to this asset type.
-        const assetType = normalizeText(building && building.buildingType);
-
+        // Keep assigned templates available for removal; all active templates can be added.
         const templates = getScheduledItemTemplates().filter(function (template) {
-          const alreadyAssigned = initialSelectedIds.has(template.id);
-          if (alreadyAssigned) {
-            return true;
-          }
-
-          if (!isMasterTemplateActive(template)) {
-            return false;
-          }
-
-          const templateAssetType = normalizeText(template.assetType || "All Assets");
-          return templateAssetType === "all assets"
-            || !templateAssetType
-            || (assetType && templateAssetType === assetType);
+          return initialSelectedIds.has(template.id) || isMasterTemplateActive(template);
         });
 
         if (!searchQuery) {
@@ -10826,7 +10793,6 @@
         const query = normalizeText(searchQuery);
         return templates.filter(function (template) {
           return normalizeText(template.name).includes(query)
-            || normalizeText(template.assetType).includes(query)
             || normalizeText(template.description).includes(query);
         });
       }
@@ -10857,7 +10823,6 @@
               <input type="checkbox" value="${template.id}"${checked} />
               <span class="template-picker-item-content">
                 <strong>${escapeHtml(template.name)}</strong>
-                <span>${escapeHtml(template.assetType || "All Assets")}</span>
                 <span>${escapeHtml(template.defaultFrequency)}</span>
                 ${archivedLabel}
               </span>
