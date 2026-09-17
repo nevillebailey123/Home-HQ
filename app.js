@@ -4538,6 +4538,7 @@
         preferredCompanyId: existing ? existing.preferredCompanyId || "" : "",
         preferredContactId: existing ? existing.preferredContactId || "" : "",
         notes: existing ? existing.notes || "" : "",
+        customRecurringDates: existing ? existing.customRecurringDates || [] : [],
         status: "",
         createdDate: existing ? existing.createdDate : now,
         lastUpdated: existing ? existing.lastUpdated || now : now,
@@ -11797,6 +11798,7 @@
           defaultFrequency: "One-off",
           preferredContactId: "",
           defaultNotes: "",
+          customRecurringDates: scheduleItem.customRecurringDates || [],
           attachments: [],
         },
         tenancy: null,
@@ -12170,6 +12172,9 @@
         frequency: Object.prototype.hasOwnProperty.call(resolvedUpdates, "defaultFrequency")
           ? String(resolvedUpdates.defaultFrequency || "").trim()
           : String(item.frequency || "").trim(),
+        customRecurringDates: Array.isArray(resolvedUpdates.customRecurringDates)
+          ? resolvedUpdates.customRecurringDates
+          : (item.customRecurringDates || []),
         initialDueDate: Object.prototype.hasOwnProperty.call(resolvedUpdates, "initialDueDate")
           ? String(resolvedUpdates.initialDueDate || "").trim()
           : String(item.initialDueDate || item.dueDate || "").trim(),
@@ -12351,13 +12356,22 @@
   }
 
   async function handleScheduleDetailsSave(building, scheduleItem, form) {
+    if (form.dataset.saving === "true") return;
+    const saveButton = form.querySelector('[data-schedule-details-action="save"]');
+    const originalSaveText = saveButton ? saveButton.textContent : "Save";
+    form.dataset.saving = "true";
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving...";
+    }
+    try {
     const formData = new FormData(form);
     const title = String(formData.get("title") || "").trim();
     const frequency = String(formData.get("frequency") || "Annual").trim();
     const category = String(scheduleItem.category || "").trim();
     const submittedInitialDueDate = String(formData.get("initialDueDate") || "").trim();
     const propertyId = String(formData.get("propertyId") || "").trim();
-    const latestBuilding = findBuildingById(building && building.id ? building.id : activeBuildingId) || building;
+    const latestBuilding = getScheduleContextById(building && building.id ? building.id : activeBuildingId);
     const currentScheduleItem = latestBuilding && Array.isArray(latestBuilding.scheduleItems)
       ? (latestBuilding.scheduleItems.find(function (item) {
         return item.id === (scheduleItem && scheduleItem.id ? scheduleItem.id : "");
@@ -12391,11 +12405,16 @@
     }
 
     if (!detailsData || !latestBuilding || !currentScheduleItem) {
-      return;
+      throw new Error("This Calendar item could not be found. Your edits are still in the form.");
+    }
+
+    if (currentScheduleItem.sourceType === "document" && propertyId !== String(latestBuilding.id)) {
+      throw new Error("Change the linked document's Asset in Documents before moving its expiry reminder.");
     }
 
     const templateId = currentScheduleItem.propertyTemplateId || currentScheduleItem.templateId || detailsData.template.id;
-    const nextDueDate = calculateNextDueDateFromSettings(initialDueDate, frequency, detailsData.latestRecord, recurringDates, currentScheduleItem.dueDate);
+    const nextDueDate = calculateNextDueDateFromSettings(initialDueDate, frequency, detailsData.latestRecord, recurringDates,
+      initialDueDate === fallbackInitialDueDate ? currentScheduleItem.dueDate : initialDueDate);
     const updatedBuilding = applyScheduleDetailsUpdates(latestBuilding, templateId, {
       name: title,
       category: category,
@@ -12418,12 +12437,48 @@
       lastUpdated: new Date().toISOString(),
     };
 
-    window.BuildingStorage.updateBuilding(persistedBuilding);
-    const savedBuilding = window.BuildingStorage.getBuildingById(persistedBuilding.id) || persistedBuilding;
+    if (currentScheduleItem.sourceType === "document") {
+      updateScheduleSourceDocumentExpiry(persistedBuilding, currentScheduleItem, nextDueDate);
+    }
+    const savedBuilding = persistScheduleContext(persistedBuilding);
+    const syncResult = await window.BuildingStorage.waitForSupabaseSync();
+    if (!syncResult || syncResult.success !== true || syncResult.skipped) {
+      throw new Error((syncResult && syncResult.reason) || "Calendar synchronization did not complete. Please retry Save.");
+    }
     activeScheduleItemId = currentScheduleItem.id;
     renderBuildings();
     renderSchedulePage();
     await openScheduleDetailsDialog(savedBuilding.id, currentScheduleItem.id, true, "details");
+    } catch (error) {
+      console.error("Unable to save Calendar item:", error);
+      window.alert("Calendar save was not confirmed. Your edits are still in the form.\n\n" +
+        (error && error.message ? error.message : "Please retry Save."));
+    } finally {
+      delete form.dataset.saving;
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = originalSaveText;
+      }
+    }
+  }
+
+  function updateScheduleSourceDocumentExpiry(building, scheduleItem, expiryDate) {
+    let found = false;
+    const update = function (record) {
+      if (String(record.id) !== String(scheduleItem.documentId)) return record;
+      found = true;
+      return { ...record, expiryDate: expiryDate, lastUpdated: new Date().toISOString() };
+    };
+    building.documents = (building.documents || []).map(update);
+    const updateTenancy = function (tenancy) {
+      if (!tenancy) return tenancy;
+      const lease = tenancy.lease || {};
+      const documents = (lease.documents || tenancy.documents || []).map(update);
+      return { ...tenancy, documents: documents, lease: { ...lease, documents: documents } };
+    };
+    building.tenancies = (building.tenancies || []).map(updateTenancy);
+    building.tenancy = updateTenancy(building.tenancy);
+    if (!found) throw new Error("The document linked to this expiry reminder could not be found.");
   }
 
   async function handleScheduleDocumentUpload(building, scheduleItem, type) {
