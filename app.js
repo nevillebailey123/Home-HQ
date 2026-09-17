@@ -11883,34 +11883,39 @@
   }
 
   function renderSchedulePrimaryContactOptions(building, selectedContactId) {
-    const contacts = building ? getContactsForBuilding(building) : dedupeContacts(getContacts());
+    // A calendar assignment can use any saved contact, without a prior asset link.
+    const selectedContact = findContactById(String(selectedContactId || ""));
+    const contactsById = new Map();
+    [...getContacts(), ...(building ? getContactsForBuilding(building) : []), selectedContact]
+      .filter(Boolean)
+      .forEach(function (contact) {
+        const id = String(contact.id || "").trim();
+        if (id && !contactsById.has(id)) contactsById.set(id, contact);
+      });
+    const contacts = Array.from(contactsById.values()).sort(function (left, right) {
+      return String(left.name || "").localeCompare(String(right.name || ""));
+    });
     return ['<option value="">Not set</option>']
       .concat(contacts.map(function (contact) {
         const relationship = getBuildingRelationshipForContact(building, contact);
         const selected = String(contact.id) === String(selectedContactId || "") ? " selected" : "";
-        return `<option value="${contact.id}"${selected}>${escapeHtml(contact.name)} (${escapeHtml(relationship)})</option>`;
+        return `<option value="${escapeHtml(contact.id)}"${selected}>${escapeHtml(contact.name)} (${escapeHtml(relationship)})</option>`;
       }))
       .join("");
   }
 
   function readSchedulePrimaryContactId(form, formData, scheduleItem, template) {
-    const fallbackValue = String(scheduleItem && scheduleItem.preferredContactId ? scheduleItem.preferredContactId : template && template.preferredContactId ? template.preferredContactId : "").trim();
-
+    // An explicit blank selection clears the assignment; only absent controls inherit.
     if (form && form.elements && form.elements.primaryContactId) {
-      const directValue = String(form.elements.primaryContactId.value || "").trim();
-      if (directValue) {
-        return directValue;
-      }
+      return String(form.elements.primaryContactId.value || "").trim();
     }
-
     if (formData && typeof formData.get === "function") {
-      const formValue = String(formData.get("primaryContactId") || "").trim();
-      if (formValue) {
-        return formValue;
-      }
+      const value = formData.get("primaryContactId");
+      if (value !== null && value !== undefined) return String(value).trim();
     }
-
-    return fallbackValue;
+    return String(scheduleItem && scheduleItem.preferredContactId
+      ? scheduleItem.preferredContactId
+      : template && template.preferredContactId ? template.preferredContactId : "").trim();
   }
 
   function renderRecurringDateOptions(selectedValue, maxValue, includeBlank) {
