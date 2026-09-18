@@ -4821,3 +4821,125 @@ body.settings-active .page-asset-filter-row { display: none; }
 @media (max-width: 600px) {
   #schedule-view .schedule-filter-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Shared geometry for the three main workspaces. */
+:root {
+  --workspace-gap: 1rem;
+  --workspace-control-height: 48px;
+  --workspace-action-width: 190px;
+  --workspace-panel-padding: 1.6rem;
+}
+:is(#schedule-view, #contacts-view, #lease-view) > .view-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  box-sizing: border-box;
+  min-height: 112px;
+  padding: 0.75rem 0 0;
+  margin: 0 0 1.75rem;
+  gap: var(--workspace-gap);
+  flex: 0 0 auto;
+}
+:is(#schedule-view, #contacts-view, #lease-view) > .view-header h1 {
+  line-height: 1.2;
+  margin: 0;
+}
+:is(#schedule-view, #contacts-view, #lease-view) > .view-header .tagline {
+  line-height: 1.5;
+  margin: 0.45rem 0 0;
+}
+:is(#schedule-view, #contacts-view, #lease-view) > .view-header .top-right-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  flex: 0 0 var(--workspace-action-width);
+  width: var(--workspace-action-width);
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+#schedule-view > .schedule-operations-card,
+#contacts-view > .contacts-page-filters,
+#lease-view > #lease-repository-card {
+  box-sizing: border-box;
+  padding: var(--workspace-panel-padding);
+  margin-top: 0;
+}
+#contacts-view > .contacts-page-filters { flex: 0 0 auto; }
+#schedule-view .schedule-filter-row,
+#contacts-view .contacts-page-filters .documents-filter-row,
+#lease-view .documents-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) var(--workspace-action-width);
+  align-items: end;
+  gap: var(--workspace-gap);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+#schedule-view .schedule-filter-row > label,
+#contacts-view .contacts-page-filters .documents-filter-row > label,
+#lease-view .documents-toolbar > label {
+  display: grid;
+  grid-template-rows: auto var(--workspace-control-height);
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  align-self: end;
+}
+#contacts-view .contacts-page-filters .documents-filter-row > label:last-of-type { grid-column: 2 / 4; }
+#schedule-view .schedule-filter-row .page-add-action,
+#contacts-view .contacts-page-filters .page-add-action,
+#lease-view .documents-toolbar .page-add-action { grid-column: 4; grid-row: 1; }
+#schedule-view .schedule-filter-row .schedule-filter-label,
+#contacts-view .contacts-page-filters .schedule-filter-label,
+#lease-view .documents-toolbar .schedule-filter-label {
+  display: block;
+  font-size: var(--type-label-contacts);
+  line-height: 1.35;
+  font-weight: 600;
+  margin: 0;
+}
+#schedule-view .schedule-filter-row :is(input, select, .page-add-action),
+#contacts-view .contacts-page-filters :is(input, select, .page-add-action),
+#lease-view .documents-toolbar :is(input, select, .page-add-action) {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none;
+  min-width: 0;
+  height: var(--workspace-control-height);
+  min-height: var(--workspace-control-height);
+  padding: 0.65rem 0.75rem;
+  margin: 0;
+  font-size: var(--type-body-contacts);
+  line-height: 1.25;
+  border-radius: 0.55rem;
+}
+@media (max-width: 760px) {
+  #schedule-view .schedule-filter-row,
+  #contacts-view .contacts-page-filters .documents-filter-row,
+  #lease-view .documents-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #contacts-view .contacts-page-filters .documents-filter-row > label:last-of-type { grid-column: 2; }
+  #schedule-view .schedule-filter-row .page-add-action,
+  #contacts-view .contacts-page-filters .page-add-action,
+  #lease-view .documents-toolbar .page-add-action { grid-column: 2; grid-row: 2; }
+}
+@media (max-width: 600px) {
+  :root { --workspace-panel-padding: 1rem; }
+  :is(#schedule-view, #contacts-view, #lease-view) > .view-header {
+    min-height: 132px;
+  }
+  :is(#schedule-view, #contacts-view, #lease-view) > .view-header .top-right-actions {
+    flex-basis: 4.8rem; width: 4.8rem;
+  }
+  #schedule-view .schedule-filter-row,
+  #contacts-view .contacts-page-filters .documents-filter-row,
+  #lease-view .documents-toolbar { grid-template-columns: minmax(0, 1fr); }
+  #contacts-view .contacts-page-filters .documents-filter-row > label:last-of-type { grid-column: auto; }
+  #schedule-view .schedule-filter-row .page-add-action,
+  #contacts-view .contacts-page-filters .page-add-action,
+  #lease-view .documents-toolbar .page-add-action { grid-column: auto; grid-row: auto; }
+}
+
+#schedule-view .schedule-filter-row > label:has(> #schedule-filter-category) { display: none; }
