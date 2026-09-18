@@ -4943,3 +4943,38 @@ body.settings-active .page-asset-filter-row { display: none; }
 }
 
 #schedule-view .schedule-filter-row > label:has(> #schedule-filter-category) { display: none; }
+
+
+/* Small screens need document scrolling: stacked controls can consume the
+   entire desktop workspace height and leave its nested list unreachable. */
+@media (max-width: 900px), (pointer: coarse) {
+  html:has(body.calendar-active),
+  body.calendar-active,
+  body.calendar-active .app-shell {
+    height: auto;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+
+  #schedule-view.is-active,
+  #contacts-view.is-active,
+  #tenancy-view.is-active {
+    height: auto;
+    overflow: visible;
+  }
+
+  #schedule-view > .schedule-operations-card,
+  #schedule-view .schedule-ops-list,
+  #contacts-view > #contacts-list-card,
+  #contacts-view #contacts-list,
+  #contacts-view > #contact-form-card,
+  #tenancy-view > .tab-panel.is-active,
+  #tenancy-details-card,
+  #tenancy-details-list {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+}
